@@ -1,0 +1,10 @@
+{
+  "name": "podcast-app",
+  "private": true,
+  "description": "小众播客节目单 — 根目录便捷脚本",
+  "scripts": {
+    "dev": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "install:frontend": "npm install --prefix frontend"
+  }
+}
