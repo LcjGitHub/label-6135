@@ -412,7 +412,7 @@ export default function PodcastListPage() {
             <TextField
               label="订阅链接"
               fullWidth
-              placeholder="输入播客订阅地址 URL"
+              placeholder="请输入该播客的订阅或收听地址"
               value={form.subscribe_url}
               onChange={(e) => setForm({ ...form, subscribe_url: e.target.value })}
             />

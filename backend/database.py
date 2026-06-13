@@ -57,6 +57,26 @@ def migrate_database() -> None:
                     "ALTER TABLE podcasts ADD COLUMN subscribe_url VARCHAR(500)"
                 )
             )
+    if "subscribe_url" in columns:
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    "UPDATE podcasts SET subscribe_url = 'https://www.xiaoyuzhoufm.com/podcast/frontend-coffee' "
+                    "WHERE name = '前端早咖啡' AND (subscribe_url IS NULL OR subscribe_url = '')"
+                )
+            )
+            conn.execute(
+                text(
+                    "UPDATE podcasts SET subscribe_url = 'https://podcasts.apple.com/cn/podcast/indie-dev-radio' "
+                    "WHERE name = '独立开发者电台' AND (subscribe_url IS NULL OR subscribe_url = '')"
+                )
+            )
+            conn.execute(
+                text(
+                    "UPDATE podcasts SET subscribe_url = 'https://music.163.com/#/djradio?id=99999999' "
+                    "WHERE name = '设计杂谈' AND (subscribe_url IS NULL OR subscribe_url = '')"
+                )
+            )
     if "is_favorited" not in columns:
         with engine.begin() as conn:
             conn.execute(
