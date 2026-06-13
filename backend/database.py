@@ -119,3 +119,13 @@ def migrate_database() -> None:
                     "ALTER TABLE episodes ADD COLUMN listen_status TEXT NOT NULL DEFAULT '未收听'"
                 )
             )
+    if "listen_status" in episode_columns:
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    "UPDATE episodes SET listen_status = '未收听' "
+                    "WHERE listen_status NOT IN ('未收听', '已收听') "
+                    "OR listen_status IS NULL "
+                    "OR listen_status = ''"
+                )
+            )

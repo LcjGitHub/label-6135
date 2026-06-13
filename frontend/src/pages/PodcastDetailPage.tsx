@@ -78,6 +78,7 @@ export default function PodcastDetailPage() {
     queryKey: ['episodes', podcastId, searchKeyword],
     queryFn: () => fetchEpisodes(podcastId, searchKeyword || undefined),
     enabled: Number.isFinite(podcastId) && searchKeyword.length > 0,
+    placeholderData: undefined,
   });
 
   useEffect(() => {
@@ -87,8 +88,11 @@ export default function PodcastDetailPage() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const episodes = searchKeyword && searchedEpisodes ? searchedEpisodes : podcast?.episodes ?? [];
   const showSearchResults = searchKeyword.length > 0;
+  const isSearchFirstLoading = showSearchResults && isSearching && !searchedEpisodes;
+  const episodes: Episode[] = showSearchResults
+    ? searchedEpisodes ?? []
+    : podcast?.episodes ?? [];
 
   const updatePodcastMutation = useMutation({
     mutationFn: (payload: PodcastFormData) => updatePodcast(podcastId, payload),
@@ -110,6 +114,7 @@ export default function PodcastDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['podcast', podcastId] });
       queryClient.invalidateQueries({ queryKey: ['stats'] });
       queryClient.invalidateQueries({ queryKey: ['all-episodes'] });
+      queryClient.invalidateQueries({ queryKey: ['episodes', podcastId] });
       closeEpisodeDialog();
     },
   });
@@ -120,6 +125,7 @@ export default function PodcastDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['podcast', podcastId] });
       queryClient.invalidateQueries({ queryKey: ['stats'] });
       queryClient.invalidateQueries({ queryKey: ['all-episodes'] });
+      queryClient.invalidateQueries({ queryKey: ['episodes', podcastId] });
     },
   });
 
@@ -132,6 +138,7 @@ export default function PodcastDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['podcast', podcastId] });
       queryClient.invalidateQueries({ queryKey: ['all-episodes'] });
+      queryClient.invalidateQueries({ queryKey: ['episodes', podcastId] });
     },
     onError: (error) => {
       setErrorSnackbar({
@@ -281,7 +288,13 @@ export default function PodcastDetailPage() {
 
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h5" fontWeight={600}>
-          单集列表 ({showSearchResults ? `${episodes.length} / ${podcast.episodes.length}` : podcast.episodes.length})
+          单集列表 (
+          {showSearchResults
+            ? isSearchFirstLoading
+              ? `搜索中... / ${podcast.episodes.length}`
+              : `${episodes.length} / ${podcast.episodes.length}`
+            : podcast.episodes.length}
+          )
         </Typography>
         <Button variant="contained" startIcon={<AddIcon />} onClick={openCreateEpisode}>
           新增单集
@@ -325,7 +338,12 @@ export default function PodcastDetailPage() {
       />
 
       <Card variant="outlined">
-        {episodes.length === 0 ? (
+        {isSearchFirstLoading ? (
+          <Box p={4} textAlign="center">
+            <CircularProgress size={32} sx={{ mb: 2 }} />
+            <Typography color="text.secondary">正在搜索单集...</Typography>
+          </Box>
+        ) : episodes.length === 0 ? (
           <Box p={4} textAlign="center">
             <Typography color="text.secondary">
               {showSearchResults
