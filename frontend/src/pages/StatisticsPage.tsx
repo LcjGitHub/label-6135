@@ -111,42 +111,52 @@ export default function StatisticsPage() {
         各平台数据
       </Typography>
 
-      <Box
-        sx={{
-          display: 'grid',
-          gap: 2,
-          gridTemplateColumns: {
-            xs: '1fr',
-            sm: 'repeat(2, 1fr)',
-            md: 'repeat(3, 1fr)',
-          },
-        }}
-      >
-        {stats?.platform_stats?.map((item: PlatformStats) => (
-          <Card key={item.platform} variant="outlined">
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                <Chip label={item.platform} color="primary" variant="outlined" />
-              </Stack>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                播客数量
-              </Typography>
-              <Typography variant="h5" fontWeight={600} gutterBottom mb={2}>
-                {item.podcast_count} 档
-              </Typography>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                平均评分
-              </Typography>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Rating value={item.avg_rating / 2} precision={0.5} readOnly size="small" />
-                <Typography variant="body1" fontWeight={600}>
-                  {item.avg_rating.toFixed(1)}
+      {stats?.platform_stats?.length === 0 ? (
+        <Card variant="outlined">
+          <CardContent sx={{ py: 6, textAlign: 'center' }}>
+            <Typography color="text.secondary">
+              暂无平台数据，先去播客列表添加一些节目吧。
+            </Typography>
+          </CardContent>
+        </Card>
+      ) : (
+        <Box
+          sx={{
+            display: 'grid',
+            gap: 2,
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              md: 'repeat(3, 1fr)',
+            },
+          }}
+        >
+          {stats?.platform_stats?.map((item: PlatformStats) => (
+            <Card key={item.platform} variant="outlined">
+              <CardContent>
+                <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                  <Chip label={item.platform} color="primary" variant="outlined" />
+                </Stack>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  播客数量
                 </Typography>
-              </Stack>
-            </CardContent>
-          </Card>
-        ))}
-      </Box>
+                <Typography variant="h5" fontWeight={600} gutterBottom mb={2}>
+                  {item.podcast_count} 档
+                </Typography>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  平均评分
+                </Typography>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Rating value={item.avg_rating / 2} precision={0.5} readOnly size="small" />
+                  <Typography variant="body1" fontWeight={600}>
+                    {item.avg_rating.toFixed(1)}
+                  </Typography>
+                </Stack>
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
+      )}
     </>
   );
 }

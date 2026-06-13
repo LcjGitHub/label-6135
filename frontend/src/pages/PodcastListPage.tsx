@@ -57,13 +57,17 @@ export default function PodcastListPage() {
       editing ? updatePodcast(editing.id, payload) : createPodcast(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['podcasts'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
       closeDialog();
     },
   });
 
   const removeMutation = useMutation({
     mutationFn: deletePodcast,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['podcasts'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['podcasts'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+    },
   });
 
   /** 打开新建对话框 */

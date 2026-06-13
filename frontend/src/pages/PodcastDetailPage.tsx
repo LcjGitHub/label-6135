@@ -63,6 +63,7 @@ export default function PodcastDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['podcast', podcastId] });
       queryClient.invalidateQueries({ queryKey: ['podcasts'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
       setPodcastDialogOpen(false);
     },
   });
@@ -74,13 +75,17 @@ export default function PodcastDetailPage() {
         : createEpisode(podcastId, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['podcast', podcastId] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
       closeEpisodeDialog();
     },
   });
 
   const removeEpisodeMutation = useMutation({
     mutationFn: deleteEpisode,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['podcast', podcastId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['podcast', podcastId] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+    },
   });
 
   /** 打开播客编辑对话框 */
