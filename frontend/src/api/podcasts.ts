@@ -133,6 +133,21 @@ export async function fetchStats(): Promise<Stats> {
   return data;
 }
 
+/** 获取指定播客的单集列表（支持标题关键词搜索） */
+export async function fetchEpisodes(
+  podcastId: number,
+  keyword?: string,
+): Promise<Episode[]> {
+  const params: Record<string, string> = {};
+  if (keyword) {
+    params.keyword = keyword;
+  }
+  const { data } = await api.get<Episode[]>(`/podcasts/${podcastId}/episodes`, {
+    params,
+  });
+  return data;
+}
+
 /** 获取全部单集列表（跨播客） */
 export async function fetchAllEpisodes(): Promise<EpisodeWithPodcast[]> {
   const { data } = await api.get<EpisodeWithPodcast[]>('/episodes');

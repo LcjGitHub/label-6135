@@ -202,12 +202,20 @@ def delete_podcast(podcast_id: int, db: Session = Depends(get_db)):
     "/api/podcasts/{podcast_id}/episodes",
     response_model=list[EpisodeResponse],
 )
-def list_episodes(podcast_id: int, db: Session = Depends(get_db)):
-    """获取指定播客的单集列表。"""
+def list_episodes(
+    podcast_id: int,
+    keyword: str | None = Query(None, min_length=1, max_length=300),
+    db: Session = Depends(get_db),
+):
+    """获取指定播客的单集列表（支持标题关键词模糊搜索）。"""
     podcast = db.query(models.Podcast).filter(models.Podcast.id == podcast_id).first()
     if not podcast:
         raise HTTPException(status_code=404, detail="播客不存在")
-    return podcast.episodes
+    query = db.query(models.Episode).filter(models.Episode.podcast_id == podcast_id)
+    if keyword:
+        query = query.filter(models.Episode.title.contains(keyword))
+    query = query.order_by(models.Episode.id)
+    return query.all()
 
 
 @app.post(

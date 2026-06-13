@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   Box,
@@ -13,6 +13,7 @@ import {
   DialogTitle,
   Divider,
   IconButton,
+  InputAdornment,
   Link,
   List,
   ListItem,
@@ -26,15 +27,18 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ClearIcon from '@mui/icons-material/Clear';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import SearchIcon from '@mui/icons-material/Search';
 import dayjs from 'dayjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import {
   createEpisode,
   deleteEpisode,
+  fetchEpisodes,
   fetchPodcast,
   updateEpisode,
   updateListenStatus,
@@ -61,12 +65,30 @@ export default function PodcastDetailPage() {
     open: boolean;
     message: string;
   }>({ open: false, message: '' });
+  const [searchInput, setSearchInput] = useState('');
+  const [searchKeyword, setSearchKeyword] = useState('');
 
   const { data: podcast, isLoading, error } = useQuery({
     queryKey: ['podcast', podcastId],
     queryFn: () => fetchPodcast(podcastId),
     enabled: Number.isFinite(podcastId),
   });
+
+  const { data: searchedEpisodes, isFetching: isSearching } = useQuery({
+    queryKey: ['episodes', podcastId, searchKeyword],
+    queryFn: () => fetchEpisodes(podcastId, searchKeyword || undefined),
+    enabled: Number.isFinite(podcastId) && searchKeyword.length > 0,
+  });
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchKeyword(searchInput.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  const episodes = searchKeyword && searchedEpisodes ? searchedEpisodes : podcast?.episodes ?? [];
+  const showSearchResults = searchKeyword.length > 0;
 
   const updatePodcastMutation = useMutation({
     mutationFn: (payload: PodcastFormData) => updatePodcast(podcastId, payload),
@@ -259,21 +281,61 @@ export default function PodcastDetailPage() {
 
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h5" fontWeight={600}>
-          单集列表 ({podcast.episodes.length})
+          单集列表 ({showSearchResults ? `${episodes.length} / ${podcast.episodes.length}` : podcast.episodes.length})
         </Typography>
         <Button variant="contained" startIcon={<AddIcon />} onClick={openCreateEpisode}>
           新增单集
         </Button>
       </Stack>
 
+      <TextField
+        fullWidth
+        placeholder="搜索单集标题关键词..."
+        value={searchInput}
+        onChange={(e) => setSearchInput(e.target.value)}
+        sx={{ mb: 2 }}
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                {isSearching ? (
+                  <CircularProgress size={20} />
+                ) : (
+                  <SearchIcon fontSize="small" color="action" />
+                )}
+              </InputAdornment>
+            ),
+            endAdornment: searchInput ? (
+              <InputAdornment position="end">
+                <IconButton
+                  size="small"
+                  edge="end"
+                  onClick={() => {
+                    setSearchInput('');
+                    setSearchKeyword('');
+                  }}
+                  aria-label="清除搜索"
+                >
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            ) : null,
+          },
+        }}
+      />
+
       <Card variant="outlined">
-        {podcast.episodes.length === 0 ? (
+        {episodes.length === 0 ? (
           <Box p={4} textAlign="center">
-            <Typography color="text.secondary">暂无单集，点击上方按钮添加。</Typography>
+            <Typography color="text.secondary">
+              {showSearchResults
+                ? `没有找到标题包含「${searchKeyword}」的单集。`
+                : '暂无单集，点击上方按钮添加。'}
+            </Typography>
           </Box>
         ) : (
           <List disablePadding>
-            {podcast.episodes.map((episode, index) => (
+            {episodes.map((episode, index) => (
               <Box key={episode.id}>
                 {index > 0 && <Divider component="li" />}
                 <ListItem
