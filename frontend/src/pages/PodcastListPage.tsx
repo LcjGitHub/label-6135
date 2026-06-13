@@ -15,7 +15,6 @@ import {
   FormControl,
   IconButton,
   InputLabel,
-  LinearProgress,
   MenuItem,
   Rating,
   Select,
@@ -32,7 +31,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import SearchIcon from '@mui/icons-material/Search';
 import dayjs from 'dayjs';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router-dom';
 import {
   createPodcast,
@@ -73,7 +72,6 @@ export default function PodcastListPage() {
   const { data: podcasts, isFetching, isLoading, error } = useQuery({
     queryKey: ['podcasts', favoritedOnly, selectedPlatform, searchKeyword, ratingSort],
     queryFn: () => fetchPodcasts(favoritedOnly, selectedPlatform, searchKeyword, ratingSort),
-    placeholderData: keepPreviousData,
   });
 
   useEffect(() => {
@@ -239,7 +237,7 @@ export default function PodcastListPage() {
             label="评分排序"
             onChange={(e) => setRatingSort(e.target.value as RatingSort)}
           >
-            <MenuItem value="none">默认排序</MenuItem>
+            <MenuItem value="none">按编号排序</MenuItem>
             <MenuItem value="desc">评分从高到低</MenuItem>
             <MenuItem value="asc">评分从低到高</MenuItem>
           </Select>
@@ -259,18 +257,14 @@ export default function PodcastListPage() {
         />
       </Stack>
 
-      {isFetching && !isLoading && <LinearProgress sx={{ mb: 2 }} />}
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          加载失败，请确认后端已在 7000 端口启动。
-        </Alert>
-      )}
-
-      {isLoading ? (
+      {isLoading || isFetching ? (
         <Box display="flex" justifyContent="center" py={8}>
           <CircularProgress />
         </Box>
+      ) : error ? (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          加载失败，请确认后端已在 7000 端口启动。
+        </Alert>
       ) : podcasts && podcasts.length === 0 ? (
         <Box
           sx={{
