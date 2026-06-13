@@ -6,6 +6,7 @@ export interface Podcast {
   theme: string;
   rating: number;
   notes: string | null;
+  is_favorited: boolean;
 }
 
 /** 单集实体 */

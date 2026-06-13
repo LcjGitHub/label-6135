@@ -16,11 +16,15 @@ import {
   Rating,
   Stack,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import dayjs from 'dayjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router-dom';
@@ -28,6 +32,7 @@ import {
   createPodcast,
   deletePodcast,
   fetchPodcasts,
+  toggleFavorite,
   updatePodcast,
 } from '../api/podcasts';
 import type { Podcast, PodcastFormData } from '../types';
@@ -46,10 +51,19 @@ export default function PodcastListPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Podcast | null>(null);
   const [form, setForm] = useState<PodcastFormData>(EMPTY_FORM);
+  const [favoritedOnly, setFavoritedOnly] = useState(false);
 
   const { data: podcasts, isLoading, error } = useQuery({
-    queryKey: ['podcasts'],
-    queryFn: fetchPodcasts,
+    queryKey: ['podcasts', favoritedOnly],
+    queryFn: () => fetchPodcasts(favoritedOnly),
+  });
+
+  const favoriteMutation = useMutation({
+    mutationFn: toggleFavorite,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['podcasts'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+    },
   });
 
   const saveMutation = useMutation({
@@ -121,6 +135,30 @@ export default function PodcastListPage() {
     }
   }
 
+  /**
+   * 切换收藏状态
+   * @param podcast - 播客
+   */
+  function handleToggleFavorite(podcast: Podcast, event: React.MouseEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    favoriteMutation.mutate(podcast.id);
+  }
+
+  /**
+   * 切换筛选模式
+   * @param _ - 事件对象
+   * @param newValue - 新值
+   */
+  function handleFilterChange(
+    _: React.MouseEvent<HTMLElement>,
+    newValue: 'all' | 'favorited',
+  ) {
+    if (newValue !== null) {
+      setFavoritedOnly(newValue === 'favorited');
+    }
+  }
+
   if (isLoading) {
     return (
       <Box display="flex" justifyContent="center" py={8}>
@@ -144,9 +182,23 @@ export default function PodcastListPage() {
             {dayjs().format('YYYY年M月D日')} · 共 {podcasts?.length ?? 0} 档节目
           </Typography>
         </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-          新增播客
-        </Button>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <ToggleButtonGroup
+            value={favoritedOnly ? 'favorited' : 'all'}
+            exclusive
+            onChange={handleFilterChange}
+            size="small"
+          >
+            <ToggleButton value="all">查看全部</ToggleButton>
+            <ToggleButton value="favorited">
+              <FavoriteIcon sx={{ fontSize: 18, mr: 0.5 }} />
+              只看收藏
+            </ToggleButton>
+          </ToggleButtonGroup>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+            新增播客
+          </Button>
+        </Stack>
       </Stack>
 
       <Box
@@ -174,6 +226,17 @@ export default function PodcastListPage() {
                       {podcast.name}
                     </Typography>
                     <Stack direction="row" spacing={0.5}>
+                      <IconButton
+                        size="small"
+                        color={podcast.is_favorited ? 'error' : 'default'}
+                        onClick={(e) => handleToggleFavorite(podcast, e)}
+                      >
+                        {podcast.is_favorited ? (
+                          <FavoriteIcon fontSize="small" />
+                        ) : (
+                          <FavoriteBorderIcon fontSize="small" />
+                        )}
+                      </IconButton>
                       <IconButton size="small" onClick={(e) => openEdit(podcast, e)}>
                         <EditIcon fontSize="small" />
                       </IconButton>

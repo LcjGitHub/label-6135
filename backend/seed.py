@@ -11,6 +11,7 @@ SEED_PODCASTS: list[dict] = [
         "theme": "前端工程与 Web 技术",
         "rating": 8.5,
         "notes": "适合通勤听，更新稳定，嘉宾质量高。",
+        "is_favorited": True,
         "episodes": [
             {
                 "title": "React 19 新特性速览",
@@ -28,6 +29,7 @@ SEED_PODCASTS: list[dict] = [
         "theme": "独立开发 / 产品 / 副业",
         "rating": 9.0,
         "notes": "访谈型节目，很多一线 indie hacker 的真实经历。",
+        "is_favorited": False,
         "episodes": [
             {
                 "title": "从 0 到 1 做 SaaS 的 12 个月",
@@ -76,6 +78,7 @@ def seed_database(db: Session) -> None:
             theme=item["theme"],
             rating=item["rating"],
             notes=item["notes"],
+            is_favorited=item.get("is_favorited", False),
         )
         db.add(podcast)
         db.flush()

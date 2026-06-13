@@ -15,8 +15,10 @@ const api = axios.create({
 });
 
 /** 获取播客列表 */
-export async function fetchPodcasts(): Promise<Podcast[]> {
-  const { data } = await api.get<Podcast[]>('/podcasts');
+export async function fetchPodcasts(favoritedOnly: boolean = false): Promise<Podcast[]> {
+  const { data } = await api.get<Podcast[]>('/podcasts', {
+    params: { favorited_only: favoritedOnly },
+  });
   return data;
 }
 
@@ -50,6 +52,12 @@ export async function updatePodcast(
 /** 删除播客 */
 export async function deletePodcast(id: number): Promise<void> {
   await api.delete(`/podcasts/${id}`);
+}
+
+/** 切换播客收藏状态 */
+export async function toggleFavorite(id: number): Promise<Podcast> {
+  const { data } = await api.patch<Podcast>(`/podcasts/${id}/favorite`);
+  return data;
 }
 
 /** 创建单集 */

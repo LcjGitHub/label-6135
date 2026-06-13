@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from sqlalchemy import Float, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Boolean, Float, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
 
 from database import Base
@@ -37,6 +37,7 @@ class Podcast(Base):
     theme: Mapped[str] = mapped_column(String(200), nullable=False)
     rating: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_favorited: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     episodes: Mapped[list["Episode"]] = relationship(
         "Episode",

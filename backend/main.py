@@ -97,9 +97,24 @@ def get_stats(db: Session = Depends(get_db)):
 
 
 @app.get("/api/podcasts", response_model=list[PodcastResponse])
-def list_podcasts(db: Session = Depends(get_db)):
+def list_podcasts(favorited_only: bool = False, db: Session = Depends(get_db)):
     """获取播客列表。"""
-    return db.query(models.Podcast).order_by(models.Podcast.id).all()
+    query = db.query(models.Podcast)
+    if favorited_only:
+        query = query.filter(models.Podcast.is_favorited == True)
+    return query.order_by(models.Podcast.id).all()
+
+
+@app.patch("/api/podcasts/{podcast_id}/favorite", response_model=PodcastResponse)
+def toggle_favorite(podcast_id: int, db: Session = Depends(get_db)):
+    """切换播客收藏状态。"""
+    podcast = db.query(models.Podcast).filter(models.Podcast.id == podcast_id).first()
+    if not podcast:
+        raise HTTPException(status_code=404, detail="播客不存在")
+    podcast.is_favorited = not podcast.is_favorited
+    db.commit()
+    db.refresh(podcast)
+    return podcast
 
 
 @app.post("/api/podcasts", response_model=PodcastResponse, status_code=201)
