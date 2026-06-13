@@ -1,10 +1,9 @@
 """SQLAlchemy ORM 模型。"""
 
 import enum
-from dataclasses import dataclass
 
-from sqlalchemy import Boolean, Enum, Float, ForeignKey, Integer, String, Text, func
-from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
+from sqlalchemy import Boolean, Enum, Float, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
 
@@ -14,24 +13,6 @@ class ListenStatus(enum.Enum):
 
     UNLISTENED = "未收听"
     LISTENED = "已收听"
-
-
-@dataclass
-class PlatformStatsData:
-    """平台统计数据。"""
-
-    platform: str
-    podcast_count: int
-    avg_rating: float
-
-
-@dataclass
-class StatsData:
-    """统计概览数据。"""
-
-    total_podcasts: int
-    total_episodes: int
-    platform_stats: list[PlatformStatsData]
 
 
 class Podcast(Base):
@@ -54,43 +35,6 @@ class Podcast(Base):
         cascade="all, delete-orphan",
         order_by="Episode.id",
     )
-
-    @staticmethod
-    def get_stats(db: Session) -> StatsData:
-        """
-        获取统计概览数据。
-
-        @param {Session} db - SQLAlchemy 会话
-        @returns {StatsData} 统计数据（播客总数、单集总数、各平台统计）
-        """
-        total_podcasts = db.query(func.count(Podcast.id)).scalar() or 0
-        total_episodes = db.query(func.count(Episode.id)).scalar() or 0
-
-        platform_rows = (
-            db.query(
-                Podcast.platform,
-                func.count(Podcast.id).label("podcast_count"),
-                func.avg(Podcast.rating).label("avg_rating"),
-            )
-            .group_by(Podcast.platform)
-            .order_by(Podcast.platform)
-            .all()
-        )
-
-        platform_stats = [
-            PlatformStatsData(
-                platform=row.platform,
-                podcast_count=row.podcast_count,
-                avg_rating=round(row.avg_rating or 0.0, 2),
-            )
-            for row in platform_rows
-        ]
-
-        return StatsData(
-            total_podcasts=total_podcasts,
-            total_episodes=total_episodes,
-            platform_stats=platform_stats,
-        )
 
 
 class Episode(Base):
