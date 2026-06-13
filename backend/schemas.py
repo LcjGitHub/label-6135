@@ -66,3 +66,19 @@ class PodcastDetailResponse(PodcastResponse):
     """播客详情（含单集列表）。"""
 
     episodes: list[EpisodeResponse] = []
+
+
+class PlatformStats(BaseModel):
+    """平台统计数据。"""
+
+    platform: str
+    podcast_count: int
+    avg_rating: float
+
+
+class StatsResponse(BaseModel):
+    """统计概览响应。"""
+
+    total_podcasts: int
+    total_episodes: int
+    platform_stats: list[PlatformStats]

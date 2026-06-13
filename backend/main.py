@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 import models
@@ -16,6 +17,7 @@ from schemas import (
     PodcastDetailResponse,
     PodcastResponse,
     PodcastUpdate,
+    StatsResponse,
 )
 from seed import seed_database
 
@@ -47,6 +49,39 @@ app.add_middleware(
 def health_check():
     """健康检查。"""
     return {"status": "ok"}
+
+
+@app.get("/api/stats", response_model=StatsResponse)
+def get_stats(db: Session = Depends(get_db)):
+    """获取统计概览数据。"""
+    total_podcasts = db.query(func.count(models.Podcast.id)).scalar() or 0
+    total_episodes = db.query(func.count(models.Episode.id)).scalar() or 0
+
+    platform_stats_query = (
+        db.query(
+            models.Podcast.platform,
+            func.count(models.Podcast.id).label("podcast_count"),
+            func.avg(models.Podcast.rating).label("avg_rating"),
+        )
+        .group_by(models.Podcast.platform)
+        .order_by(models.Podcast.platform)
+        .all()
+    )
+
+    platform_stats = [
+        {
+            "platform": row.platform,
+            "podcast_count": row.podcast_count,
+            "avg_rating": round(row.avg_rating or 0.0, 2),
+        }
+        for row in platform_stats_query
+    ]
+
+    return {
+        "total_podcasts": total_podcasts,
+        "total_episodes": total_episodes,
+        "platform_stats": platform_stats,
+    }
 
 
 @app.get("/api/podcasts", response_model=list[PodcastResponse])

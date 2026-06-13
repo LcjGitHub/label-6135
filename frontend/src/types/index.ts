@@ -35,3 +35,17 @@ export interface EpisodeFormData {
   title: string;
   recommendation: string;
 }
+
+/** 平台统计数据 */
+export interface PlatformStats {
+  platform: string;
+  podcast_count: number;
+  avg_rating: number;
+}
+
+/** 统计概览数据 */
+export interface Stats {
+  total_podcasts: number;
+  total_episodes: number;
+  platform_stats: PlatformStats[];
+}

@@ -5,6 +5,7 @@ import type {
   Podcast,
   PodcastDetail,
   PodcastFormData,
+  Stats,
 } from '../types';
 
 const api = axios.create({
@@ -77,4 +78,10 @@ export async function updateEpisode(
 /** 删除单集 */
 export async function deleteEpisode(id: number): Promise<void> {
   await api.delete(`/episodes/${id}`);
+}
+
+/** 获取统计概览 */
+export async function fetchStats(): Promise<Stats> {
+  const { data } = await api.get<Stats>('/stats');
+  return data;
 }
