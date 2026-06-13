@@ -15,6 +15,7 @@ import {
   FormControl,
   IconButton,
   InputLabel,
+  LinearProgress,
   MenuItem,
   Rating,
   Select,
@@ -31,7 +32,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import SearchIcon from '@mui/icons-material/Search';
 import dayjs from 'dayjs';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router-dom';
 import {
   createPodcast,
@@ -67,9 +68,10 @@ export default function PodcastListPage() {
     queryFn: fetchPlatforms,
   });
 
-  const { data: podcasts, isLoading, error } = useQuery({
+  const { data: podcasts, isFetching, isLoading, error } = useQuery({
     queryKey: ['podcasts', favoritedOnly, selectedPlatform, searchKeyword],
     queryFn: () => fetchPodcasts(favoritedOnly, selectedPlatform, searchKeyword),
+    placeholderData: keepPreviousData,
   });
 
   useEffect(() => {
@@ -180,18 +182,6 @@ export default function PodcastListPage() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <Box display="flex" justifyContent="center" py={8}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return <Alert severity="error">加载失败，请确认后端已在 7000 端口启动。</Alert>;
-  }
-
   return (
     <>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
@@ -254,75 +244,103 @@ export default function PodcastListPage() {
         />
       </Stack>
 
-      <Box
-        sx={{
-          display: 'grid',
-          gap: 2,
-          gridTemplateColumns: {
-            xs: '1fr',
-            sm: 'repeat(2, 1fr)',
-            md: 'repeat(3, 1fr)',
-          },
-        }}
-      >
-        {podcasts?.map((podcast) => (
-          <Box key={podcast.id}>
-            <Card variant="outlined" sx={{ height: '100%' }}>
-              <CardActionArea
-                component={RouterLink}
-                to={`/podcasts/${podcast.id}`}
-                sx={{ height: '100%' }}
-              >
-                <CardContent>
-                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                    <Typography variant="h6" fontWeight={600} gutterBottom>
-                      {podcast.name}
-                    </Typography>
-                    <Stack direction="row" spacing={0.5}>
-                      <IconButton
-                        size="small"
-                        color={podcast.is_favorited ? 'error' : 'default'}
-                        onClick={(e) => handleToggleFavorite(podcast, e)}
-                      >
-                        {podcast.is_favorited ? (
-                          <FavoriteIcon fontSize="small" />
-                        ) : (
-                          <FavoriteBorderIcon fontSize="small" />
-                        )}
-                      </IconButton>
-                      <IconButton size="small" onClick={(e) => openEdit(podcast, e)}>
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={(e) => handleDelete(podcast, e)}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
+      {isFetching && !isLoading && <LinearProgress sx={{ mb: 2 }} />}
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          加载失败，请确认后端已在 7000 端口启动。
+        </Alert>
+      )}
+
+      {isLoading ? (
+        <Box display="flex" justifyContent="center" py={8}>
+          <CircularProgress />
+        </Box>
+      ) : podcasts && podcasts.length === 0 ? (
+        <Box
+          sx={{
+            py: 10,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Typography variant="body1" color="text.secondary">
+            暂无符合条件的播客
+          </Typography>
+        </Box>
+      ) : (
+        <Box
+          sx={{
+            display: 'grid',
+            gap: 2,
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              md: 'repeat(3, 1fr)',
+            },
+          }}
+        >
+          {podcasts?.map((podcast) => (
+            <Box key={podcast.id}>
+              <Card variant="outlined" sx={{ height: '100%' }}>
+                <CardActionArea
+                  component={RouterLink}
+                  to={`/podcasts/${podcast.id}`}
+                  sx={{ height: '100%' }}
+                >
+                  <CardContent>
+                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                      <Typography variant="h6" fontWeight={600} gutterBottom>
+                        {podcast.name}
+                      </Typography>
+                      <Stack direction="row" spacing={0.5}>
+                        <IconButton
+                          size="small"
+                          color={podcast.is_favorited ? 'error' : 'default'}
+                          onClick={(e) => handleToggleFavorite(podcast, e)}
+                        >
+                          {podcast.is_favorited ? (
+                            <FavoriteIcon fontSize="small" />
+                          ) : (
+                            <FavoriteBorderIcon fontSize="small" />
+                          )}
+                        </IconButton>
+                        <IconButton size="small" onClick={(e) => openEdit(podcast, e)}>
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={(e) => handleDelete(podcast, e)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Stack>
                     </Stack>
-                  </Stack>
-                  <Stack direction="row" spacing={1} mb={1.5} flexWrap="wrap" useFlexGap>
-                    <Chip label={podcast.platform} size="small" color="primary" variant="outlined" />
-                    <Chip label={podcast.theme} size="small" />
-                  </Stack>
-                  <Stack direction="row" alignItems="center" spacing={1} mb={1}>
-                    <Rating value={podcast.rating / 2} precision={0.5} readOnly size="small" />
-                    <Typography variant="body2" color="text.secondary">
-                      {podcast.rating.toFixed(1)}
-                    </Typography>
-                  </Stack>
-                  {podcast.notes && (
-                    <Typography variant="body2" color="text.secondary" noWrap>
-                      {podcast.notes}
-                    </Typography>
-                  )}
-                </CardContent>
-              </CardActionArea>
-            </Card>
-          </Box>
-        ))}
-      </Box>
+                    <Stack direction="row" spacing={1} mb={1.5} flexWrap="wrap" useFlexGap>
+                      <Chip label={podcast.platform} size="small" color="primary" variant="outlined" />
+                      <Chip label={podcast.theme} size="small" />
+                    </Stack>
+                    <Stack direction="row" alignItems="center" spacing={1} mb={1}>
+                      <Rating value={podcast.rating / 2} precision={0.5} readOnly size="small" />
+                      <Typography variant="body2" color="text.secondary">
+                        {podcast.rating.toFixed(1)}
+                      </Typography>
+                    </Stack>
+                    {podcast.notes && (
+                      <Typography variant="body2" color="text.secondary" noWrap>
+                        {podcast.notes}
+                      </Typography>
+                    )}
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            </Box>
+          ))}
+        </Box>
+      )}
 
       <Dialog open={dialogOpen} onClose={closeDialog} fullWidth maxWidth="sm">
         <DialogTitle>{editing ? '编辑播客' : '新增播客'}</DialogTitle>
