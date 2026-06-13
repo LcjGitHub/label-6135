@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type {
+  BatchListenStatusUpdateResponse,
   Episode,
   EpisodeFormData,
   EpisodeWithPodcast,
@@ -124,6 +125,20 @@ export async function updateListenStatus(
   const { data } = await api.put<Episode>(`/episodes/${id}/listen-status`, {
     listen_status: listenStatus,
   });
+  return data;
+}
+
+/** 批量更新指定播客下全部单集的收听状态 */
+export async function updateAllEpisodesListenStatus(
+  podcastId: number,
+  listenStatus: ListenStatus,
+): Promise<BatchListenStatusUpdateResponse> {
+  const { data } = await api.put<BatchListenStatusUpdateResponse>(
+    `/podcasts/${podcastId}/episodes/listen-status`,
+    {
+      listen_status: listenStatus,
+    },
+  );
   return data;
 }
 

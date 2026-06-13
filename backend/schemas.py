@@ -31,6 +31,13 @@ class EpisodeListenStatusUpdate(BaseModel):
     listen_status: str = Field(..., pattern="^(未收听|已收听)$")
 
 
+class BatchListenStatusUpdateResponse(BaseModel):
+    """批量更新收听状态响应。"""
+
+    updated_count: int
+    podcast_id: int
+
+
 class EpisodeResponse(EpisodeBase):
     """单集响应。"""
 

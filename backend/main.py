@@ -10,6 +10,7 @@ import models
 from database import Base, engine, get_db, migrate_database
 from models import ListenStatus
 from schemas import (
+    BatchListenStatusUpdateResponse,
     EpisodeCreate,
     EpisodeListenStatusUpdate,
     EpisodeResponse,
@@ -285,6 +286,37 @@ def update_listen_status(
     db.commit()
     db.refresh(episode)
     return episode
+
+
+@app.put(
+    "/api/podcasts/{podcast_id}/episodes/listen-status",
+    response_model=BatchListenStatusUpdateResponse,
+)
+def update_all_episodes_listen_status(
+    podcast_id: int,
+    payload: EpisodeListenStatusUpdate,
+    db: Session = Depends(get_db),
+):
+    """批量更新指定播客下全部单集的收听状态。"""
+    podcast = db.query(models.Podcast).filter(models.Podcast.id == podcast_id).first()
+    if not podcast:
+        raise HTTPException(status_code=404, detail="播客不存在")
+    target_status = (
+        ListenStatus.LISTENED if payload.listen_status == "已收听" else ListenStatus.UNLISTENED
+    )
+    result = (
+        db.query(models.Episode)
+        .filter(
+            models.Episode.podcast_id == podcast_id,
+            models.Episode.listen_status != target_status,
+        )
+        .update({models.Episode.listen_status: target_status})
+    )
+    db.commit()
+    return {
+        "updated_count": result,
+        "podcast_id": podcast_id,
+    }
 
 
 if __name__ == "__main__":

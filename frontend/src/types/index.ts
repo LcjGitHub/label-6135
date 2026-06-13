@@ -1,6 +1,12 @@
 /** 单集收听状态 */
 export type ListenStatus = '未收听' | '已收听';
 
+/** 批量更新收听状态响应 */
+export interface BatchListenStatusUpdateResponse {
+  updated_count: number;
+  podcast_id: number;
+}
+
 /** 播客实体 */
 export interface Podcast {
   id: number;

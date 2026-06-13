@@ -10,6 +10,7 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
+  DialogContentText,
   DialogTitle,
   Divider,
   IconButton,
@@ -40,6 +41,7 @@ import {
   deleteEpisode,
   fetchEpisodes,
   fetchPodcast,
+  updateAllEpisodesListenStatus,
   updateEpisode,
   updateListenStatus,
   updatePodcast,
@@ -65,6 +67,11 @@ export default function PodcastDetailPage() {
     open: boolean;
     message: string;
   }>({ open: false, message: '' });
+  const [successSnackbar, setSuccessSnackbar] = useState<{
+    open: boolean;
+    message: string;
+  }>({ open: false, message: '' });
+  const [markAllDialogOpen, setMarkAllDialogOpen] = useState(false);
   const [searchInput, setSearchInput] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
 
@@ -148,6 +155,28 @@ export default function PodcastDetailPage() {
     },
     onSettled: () => {
       setUpdatingEpisodeId(null);
+    },
+  });
+
+  const markAllListenedMutation = useMutation({
+    mutationFn: () => updateAllEpisodesListenStatus(podcastId, '已收听'),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['podcast', podcastId] });
+      queryClient.invalidateQueries({ queryKey: ['all-episodes'] });
+      queryClient.invalidateQueries({ queryKey: ['episodes', podcastId] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+      setMarkAllDialogOpen(false);
+      setSuccessSnackbar({
+        open: true,
+        message: `已成功将 ${data.updated_count} 个单集标记为已收听`,
+      });
+    },
+    onError: (error) => {
+      setErrorSnackbar({
+        open: true,
+        message:
+          error instanceof Error ? error.message : '批量标记已收听失败，请重试',
+      });
     },
   });
 
@@ -296,9 +325,19 @@ export default function PodcastDetailPage() {
             : podcast.episodes.length}
           )
         </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreateEpisode}>
-          新增单集
-        </Button>
+        <Stack direction="row" spacing={1}>
+          <Button
+            variant="outlined"
+            startIcon={<CheckCircleIcon />}
+            onClick={() => setMarkAllDialogOpen(true)}
+            disabled={podcast.episodes.length === 0 || markAllListenedMutation.isPending}
+          >
+            {markAllListenedMutation.isPending ? '标记中...' : '全部标记已收听'}
+          </Button>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={openCreateEpisode}>
+            新增单集
+          </Button>
+        </Stack>
       </Stack>
 
       <TextField
@@ -513,6 +552,50 @@ export default function PodcastDetailPage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Dialog
+        open={markAllDialogOpen}
+        onClose={() => !markAllListenedMutation.isPending && setMarkAllDialogOpen(false)}
+      >
+        <DialogTitle>确认全部标记已收听</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            确定要将该播客下全部 {podcast?.episodes.length ?? 0} 个单集标记为已收听吗？
+            此操作不可撤销。
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setMarkAllDialogOpen(false)}
+            disabled={markAllListenedMutation.isPending}
+          >
+            取消
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => markAllListenedMutation.mutate()}
+            disabled={markAllListenedMutation.isPending}
+          >
+            {markAllListenedMutation.isPending ? '标记中...' : '确认标记'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={successSnackbar.open}
+        autoHideDuration={5000}
+        onClose={() => setSuccessSnackbar({ ...successSnackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          severity="success"
+          onClose={() => setSuccessSnackbar({ ...successSnackbar, open: false })}
+          sx={{ width: '100%' }}
+        >
+          {successSnackbar.message}
+        </Alert>
+      </Snackbar>
 
       <Snackbar
         open={errorSnackbar.open}
