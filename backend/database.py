@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
@@ -33,3 +33,35 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def migrate_database() -> None:
+    """
+    应用启动时执行数据库结构迁移。
+    检测 podcasts 表是否缺少 is_favorited 字段，若缺少则添加，
+    并将第一条播客设为已收藏。
+    """
+    inspector = inspect(engine)
+
+    if not inspector.has_table("podcasts"):
+        return
+
+    columns = {col["name"] for col in inspector.get_columns("podcasts")}
+    if "is_favorited" in columns:
+        return
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "ALTER TABLE podcasts ADD COLUMN is_favorited BOOLEAN NOT NULL DEFAULT 0"
+            )
+        )
+
+        first_row = conn.execute(
+            text("SELECT id FROM podcasts ORDER BY id LIMIT 1")
+        ).fetchone()
+        if first_row is not None:
+            conn.execute(
+                text("UPDATE podcasts SET is_favorited = 1 WHERE id = :id"),
+                {"id": first_row[0]},
+            )

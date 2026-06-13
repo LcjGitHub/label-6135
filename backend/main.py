@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 import models
-from database import Base, engine, get_db
+from database import Base, engine, get_db, migrate_database
 from schemas import (
     EpisodeCreate,
     EpisodeResponse,
@@ -24,8 +24,9 @@ from seed import seed_database
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    """应用启动时建表并写入种子数据。"""
+    """应用启动时建表、迁移结构并写入种子数据。"""
     Base.metadata.create_all(bind=engine)
+    migrate_database()
     db = next(get_db())
     try:
         seed_database(db)

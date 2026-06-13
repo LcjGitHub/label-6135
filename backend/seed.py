@@ -47,6 +47,7 @@ SEED_PODCASTS: list[dict] = [
         "theme": "UI/UX 与设计系统",
         "rating": 7.8,
         "notes": "偏设计视角，对前端同学理解产品很有帮助。",
+        "is_favorited": False,
         "episodes": [
             {
                 "title": "MUI v6 设计 token 迁移笔记",

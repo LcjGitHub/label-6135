@@ -25,8 +25,6 @@ import AddIcon from '@mui/icons-material/Add';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import dayjs from 'dayjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
@@ -34,7 +32,6 @@ import {
   createEpisode,
   deleteEpisode,
   fetchPodcast,
-  toggleFavorite,
   updateEpisode,
   updatePodcast,
 } from '../api/podcasts';
@@ -94,15 +91,6 @@ export default function PodcastDetailPage() {
     },
   });
 
-  const favoriteMutation = useMutation({
-    mutationFn: toggleFavorite,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['podcast', podcastId] });
-      queryClient.invalidateQueries({ queryKey: ['podcasts'] });
-      queryClient.invalidateQueries({ queryKey: ['stats'] });
-    },
-  });
-
   /** 打开播客编辑对话框 */
   function openPodcastEdit() {
     if (!podcast) return;
@@ -151,11 +139,6 @@ export default function PodcastDetailPage() {
     if (window.confirm(`确定删除单集「${episode.title}」？`)) {
       removeEpisodeMutation.mutate(episode.id);
     }
-  }
-
-  /** 切换收藏状态 */
-  function handleToggleFavorite() {
-    favoriteMutation.mutate(podcastId);
   }
 
   if (isLoading) {
@@ -211,18 +194,9 @@ export default function PodcastDetailPage() {
                 浏览于 {dayjs().format('YYYY-MM-DD HH:mm')}
               </Typography>
             </Box>
-            <Stack direction="row">
-              <IconButton
-                onClick={handleToggleFavorite}
-                color={podcast.is_favorited ? 'error' : 'default'}
-                aria-label="收藏"
-              >
-                {podcast.is_favorited ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-              </IconButton>
-              <IconButton onClick={openPodcastEdit} aria-label="编辑播客">
-                <EditIcon />
-              </IconButton>
-            </Stack>
+            <IconButton onClick={openPodcastEdit} aria-label="编辑播客">
+              <EditIcon />
+            </IconButton>
           </Stack>
         </CardContent>
       </Card>
