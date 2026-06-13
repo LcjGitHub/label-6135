@@ -118,9 +118,10 @@ def list_podcasts(
     favorited_only: bool = False,
     platform: str | None = Query(None, min_length=1, max_length=100),
     keyword: str | None = Query(None, min_length=1, max_length=200),
+    sort_by_rating: str | None = Query(None, pattern="^(asc|desc)$"),
     db: Session = Depends(get_db),
 ):
-    """获取播客列表（支持平台筛选和名称模糊搜索）。"""
+    """获取播客列表（支持平台筛选、名称模糊搜索和评分排序）。"""
     query = db.query(models.Podcast)
     if favorited_only:
         query = query.filter(models.Podcast.is_favorited == True)
@@ -128,7 +129,13 @@ def list_podcasts(
         query = query.filter(models.Podcast.platform == platform)
     if keyword:
         query = query.filter(models.Podcast.name.contains(keyword))
-    return query.order_by(models.Podcast.id).all()
+    if sort_by_rating == "desc":
+        query = query.order_by(models.Podcast.rating.desc(), models.Podcast.id)
+    elif sort_by_rating == "asc":
+        query = query.order_by(models.Podcast.rating.asc(), models.Podcast.id)
+    else:
+        query = query.order_by(models.Podcast.id)
+    return query.all()
 
 
 @app.patch("/api/podcasts/{podcast_id}/favorite", response_model=PodcastResponse)

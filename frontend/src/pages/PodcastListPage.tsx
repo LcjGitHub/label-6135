@@ -41,6 +41,7 @@ import {
   fetchPodcasts,
   toggleFavorite,
   updatePodcast,
+  type RatingSort,
 } from '../api/podcasts';
 import type { Podcast, PodcastFormData } from '../types';
 
@@ -62,6 +63,7 @@ export default function PodcastListPage() {
   const [selectedPlatform, setSelectedPlatform] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [ratingSort, setRatingSort] = useState<RatingSort>('none');
 
   const { data: platforms = [] } = useQuery({
     queryKey: ['platforms'],
@@ -69,8 +71,8 @@ export default function PodcastListPage() {
   });
 
   const { data: podcasts, isFetching, isLoading, error } = useQuery({
-    queryKey: ['podcasts', favoritedOnly, selectedPlatform, searchKeyword],
-    queryFn: () => fetchPodcasts(favoritedOnly, selectedPlatform, searchKeyword),
+    queryKey: ['podcasts', favoritedOnly, selectedPlatform, searchKeyword, ratingSort],
+    queryFn: () => fetchPodcasts(favoritedOnly, selectedPlatform, searchKeyword, ratingSort),
     placeholderData: keepPreviousData,
   });
 
@@ -227,6 +229,19 @@ export default function PodcastListPage() {
                 {p}
               </MenuItem>
             ))}
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 180 }}>
+          <InputLabel id="rating-sort-label">评分排序</InputLabel>
+          <Select
+            labelId="rating-sort-label"
+            value={ratingSort}
+            label="评分排序"
+            onChange={(e) => setRatingSort(e.target.value as RatingSort)}
+          >
+            <MenuItem value="none">默认排序</MenuItem>
+            <MenuItem value="desc">评分从高到低</MenuItem>
+            <MenuItem value="asc">评分从低到高</MenuItem>
           </Select>
         </FormControl>
         <TextField

@@ -21,11 +21,15 @@ export async function fetchPlatforms(): Promise<string[]> {
   return data;
 }
 
-/** 获取播客列表（支持平台筛选和名称搜索） */
+/** 评分排序方式 */
+export type RatingSort = 'none' | 'asc' | 'desc';
+
+/** 获取播客列表（支持平台筛选、名称搜索和评分排序） */
 export async function fetchPodcasts(
   favoritedOnly: boolean = false,
   platform?: string,
   keyword?: string,
+  sortByRating: RatingSort = 'none',
 ): Promise<Podcast[]> {
   const params: Record<string, boolean | string> = {
     favorited_only: favoritedOnly,
@@ -35,6 +39,9 @@ export async function fetchPodcasts(
   }
   if (keyword) {
     params.keyword = keyword;
+  }
+  if (sortByRating !== 'none') {
+    params.sort_by_rating = sortByRating;
   }
   const { data } = await api.get<Podcast[]>('/podcasts', { params });
   return data;
