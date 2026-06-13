@@ -2,7 +2,7 @@
 
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
@@ -101,12 +101,33 @@ def get_stats(db: Session = Depends(get_db)):
     }
 
 
+@app.get("/api/platforms", response_model=list[str])
+def list_platforms(db: Session = Depends(get_db)):
+    """获取所有平台列表（去重）。"""
+    rows = (
+        db.query(models.Podcast.platform)
+        .distinct()
+        .order_by(models.Podcast.platform)
+        .all()
+    )
+    return [row.platform for row in rows]
+
+
 @app.get("/api/podcasts", response_model=list[PodcastResponse])
-def list_podcasts(favorited_only: bool = False, db: Session = Depends(get_db)):
-    """获取播客列表。"""
+def list_podcasts(
+    favorited_only: bool = False,
+    platform: str | None = Query(None, min_length=1, max_length=100),
+    keyword: str | None = Query(None, min_length=1, max_length=200),
+    db: Session = Depends(get_db),
+):
+    """获取播客列表（支持平台筛选和名称模糊搜索）。"""
     query = db.query(models.Podcast)
     if favorited_only:
         query = query.filter(models.Podcast.is_favorited == True)
+    if platform:
+        query = query.filter(models.Podcast.platform == platform)
+    if keyword:
+        query = query.filter(models.Podcast.name.contains(keyword))
     return query.order_by(models.Podcast.id).all()
 
 

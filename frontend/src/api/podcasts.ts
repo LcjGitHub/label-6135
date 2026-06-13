@@ -15,11 +15,28 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-/** 获取播客列表 */
-export async function fetchPodcasts(favoritedOnly: boolean = false): Promise<Podcast[]> {
-  const { data } = await api.get<Podcast[]>('/podcasts', {
-    params: { favorited_only: favoritedOnly },
-  });
+/** 获取所有平台列表 */
+export async function fetchPlatforms(): Promise<string[]> {
+  const { data } = await api.get<string[]>('/platforms');
+  return data;
+}
+
+/** 获取播客列表（支持平台筛选和名称搜索） */
+export async function fetchPodcasts(
+  favoritedOnly: boolean = false,
+  platform?: string,
+  keyword?: string,
+): Promise<Podcast[]> {
+  const params: Record<string, boolean | string> = {
+    favorited_only: favoritedOnly,
+  };
+  if (platform) {
+    params.platform = platform;
+  }
+  if (keyword) {
+    params.keyword = keyword;
+  }
+  const { data } = await api.get<Podcast[]>('/podcasts', { params });
   return data;
 }
 

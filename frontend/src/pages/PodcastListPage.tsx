@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   Box,
@@ -12,8 +12,12 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
   IconButton,
+  InputLabel,
+  MenuItem,
   Rating,
+  Select,
   Stack,
   TextField,
   ToggleButton,
@@ -25,12 +29,14 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import SearchIcon from '@mui/icons-material/Search';
 import dayjs from 'dayjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router-dom';
 import {
   createPodcast,
   deletePodcast,
+  fetchPlatforms,
   fetchPodcasts,
   toggleFavorite,
   updatePodcast,
@@ -52,11 +58,26 @@ export default function PodcastListPage() {
   const [editing, setEditing] = useState<Podcast | null>(null);
   const [form, setForm] = useState<PodcastFormData>(EMPTY_FORM);
   const [favoritedOnly, setFavoritedOnly] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [searchKeyword, setSearchKeyword] = useState('');
+
+  const { data: platforms = [] } = useQuery({
+    queryKey: ['platforms'],
+    queryFn: fetchPlatforms,
+  });
 
   const { data: podcasts, isLoading, error } = useQuery({
-    queryKey: ['podcasts', favoritedOnly],
-    queryFn: () => fetchPodcasts(favoritedOnly),
+    queryKey: ['podcasts', favoritedOnly, selectedPlatform, searchKeyword],
+    queryFn: () => fetchPodcasts(favoritedOnly, selectedPlatform, searchKeyword),
   });
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchKeyword(searchInput.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const favoriteMutation = useMutation({
     mutationFn: toggleFavorite,
@@ -173,7 +194,7 @@ export default function PodcastListPage() {
 
   return (
     <>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
         <Box>
           <Typography variant="h4" fontWeight={700} gutterBottom>
             播客列表
@@ -199,6 +220,38 @@ export default function PodcastListPage() {
             新增播客
           </Button>
         </Stack>
+      </Stack>
+
+      <Stack direction="row" spacing={2} mb={3} flexWrap="wrap" useFlexGap>
+        <FormControl size="small" sx={{ minWidth: 180 }}>
+          <InputLabel id="platform-filter-label">平台筛选</InputLabel>
+          <Select
+            labelId="platform-filter-label"
+            value={selectedPlatform}
+            label="平台筛选"
+            onChange={(e) => setSelectedPlatform(e.target.value)}
+          >
+            <MenuItem value="">全部平台</MenuItem>
+            {platforms.map((p) => (
+              <MenuItem key={p} value={p}>
+                {p}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <TextField
+          size="small"
+          label="名称搜索"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="输入关键词模糊搜索..."
+          sx={{ minWidth: 260, flexGrow: 1 }}
+          slotProps={{
+            input: {
+              startAdornment: <SearchIcon color="action" sx={{ mr: 1, fontSize: 20 }} />,
+            },
+          }}
+        />
       </Stack>
 
       <Box
