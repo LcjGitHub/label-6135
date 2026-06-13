@@ -30,6 +30,16 @@ class EpisodeResponse(EpisodeBase):
     podcast_id: int
 
 
+class EpisodeWithPodcastResponse(EpisodeBase):
+    """单集响应（含所属播客信息）。"""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    podcast_id: int
+    podcast_name: str
+
+
 class PodcastBase(BaseModel):
     """播客公共字段。"""
 

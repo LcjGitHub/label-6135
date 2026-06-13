@@ -12,6 +12,7 @@ from schemas import (
     EpisodeCreate,
     EpisodeResponse,
     EpisodeUpdate,
+    EpisodeWithPodcastResponse,
     PodcastCreate,
     PodcastDetailResponse,
     PodcastResponse,
@@ -48,6 +49,33 @@ app.add_middleware(
 def health_check():
     """健康检查。"""
     return {"status": "ok"}
+
+
+@app.get("/api/episodes", response_model=list[EpisodeWithPodcastResponse])
+def list_all_episodes(db: Session = Depends(get_db)):
+    """跨播客获取全部单集列表（含所属播客信息）。"""
+    rows = (
+        db.query(
+            models.Episode.id,
+            models.Episode.podcast_id,
+            models.Episode.title,
+            models.Episode.recommendation,
+            models.Podcast.name.label("podcast_name"),
+        )
+        .join(models.Podcast, models.Episode.podcast_id == models.Podcast.id)
+        .order_by(models.Episode.id)
+        .all()
+    )
+    return [
+        {
+            "id": row.id,
+            "podcast_id": row.podcast_id,
+            "title": row.title,
+            "recommendation": row.recommendation,
+            "podcast_name": row.podcast_name,
+        }
+        for row in rows
+    ]
 
 
 @app.get("/api/stats", response_model=StatsResponse)

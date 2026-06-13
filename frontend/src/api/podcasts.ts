@@ -2,6 +2,7 @@ import axios from 'axios';
 import type {
   Episode,
   EpisodeFormData,
+  EpisodeWithPodcast,
   Podcast,
   PodcastDetail,
   PodcastFormData,
@@ -83,5 +84,11 @@ export async function deleteEpisode(id: number): Promise<void> {
 /** 获取统计概览 */
 export async function fetchStats(): Promise<Stats> {
   const { data } = await api.get<Stats>('/stats');
+  return data;
+}
+
+/** 获取全部单集列表（跨播客） */
+export async function fetchAllEpisodes(): Promise<EpisodeWithPodcast[]> {
+  const { data } = await api.get<EpisodeWithPodcast[]>('/episodes');
   return data;
 }
