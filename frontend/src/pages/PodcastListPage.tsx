@@ -58,6 +58,7 @@ export default function PodcastListPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['podcasts'] });
       queryClient.invalidateQueries({ queryKey: ['stats'] });
+      queryClient.invalidateQueries({ queryKey: ['all-episodes'] });
       closeDialog();
     },
   });
@@ -67,6 +68,7 @@ export default function PodcastListPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['podcasts'] });
       queryClient.invalidateQueries({ queryKey: ['stats'] });
+      queryClient.invalidateQueries({ queryKey: ['all-episodes'] });
     },
   });
 

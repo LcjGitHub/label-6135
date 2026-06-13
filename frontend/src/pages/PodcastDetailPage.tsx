@@ -64,6 +64,7 @@ export default function PodcastDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['podcast', podcastId] });
       queryClient.invalidateQueries({ queryKey: ['podcasts'] });
       queryClient.invalidateQueries({ queryKey: ['stats'] });
+      queryClient.invalidateQueries({ queryKey: ['all-episodes'] });
       setPodcastDialogOpen(false);
     },
   });
@@ -76,6 +77,7 @@ export default function PodcastDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['podcast', podcastId] });
       queryClient.invalidateQueries({ queryKey: ['stats'] });
+      queryClient.invalidateQueries({ queryKey: ['all-episodes'] });
       closeEpisodeDialog();
     },
   });
@@ -85,6 +87,7 @@ export default function PodcastDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['podcast', podcastId] });
       queryClient.invalidateQueries({ queryKey: ['stats'] });
+      queryClient.invalidateQueries({ queryKey: ['all-episodes'] });
     },
   });
 

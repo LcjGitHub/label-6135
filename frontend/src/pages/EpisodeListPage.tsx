@@ -94,7 +94,11 @@ export default function EpisodeListPage() {
                         {episode.recommendation}
                       </Typography>
                     </Stack>
-                  ) : null
+                  ) : (
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                      暂无推荐语
+                    </Typography>
+                  )
                 }
               />
             </ListItemButton>
