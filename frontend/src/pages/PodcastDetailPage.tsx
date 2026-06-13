@@ -101,6 +101,11 @@ export default function PodcastDetailPage() {
     ? searchedEpisodes ?? []
     : podcast?.episodes ?? [];
 
+  const allEpisodesListened =
+    podcast && podcast.episodes.length > 0
+      ? podcast.episodes.every((ep) => ep.listen_status === '已收听')
+      : true;
+
   const updatePodcastMutation = useMutation({
     mutationFn: (payload: PodcastFormData) => updatePodcast(podcastId, payload),
     onSuccess: () => {
@@ -172,6 +177,7 @@ export default function PodcastDetailPage() {
       });
     },
     onError: (error) => {
+      setMarkAllDialogOpen(false);
       setErrorSnackbar({
         open: true,
         message:
@@ -330,7 +336,11 @@ export default function PodcastDetailPage() {
             variant="outlined"
             startIcon={<CheckCircleIcon />}
             onClick={() => setMarkAllDialogOpen(true)}
-            disabled={podcast.episodes.length === 0 || markAllListenedMutation.isPending}
+            disabled={
+              podcast.episodes.length === 0 ||
+              allEpisodesListened ||
+              markAllListenedMutation.isPending
+            }
           >
             {markAllListenedMutation.isPending ? '标记中...' : '全部标记已收听'}
           </Button>
@@ -561,7 +571,7 @@ export default function PodcastDetailPage() {
         <DialogContent>
           <DialogContentText>
             确定要将该播客下全部 {podcast?.episodes.length ?? 0} 个单集标记为已收听吗？
-            此操作不可撤销。
+            仍将更新当前未标记的单集。
           </DialogContentText>
         </DialogContent>
         <DialogActions>
