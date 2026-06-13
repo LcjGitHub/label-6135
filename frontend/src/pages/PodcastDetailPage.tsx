@@ -17,6 +17,7 @@ import {
   ListItem,
   ListItemText,
   Rating,
+  Snackbar,
   Stack,
   TextField,
   Typography,
@@ -34,11 +35,11 @@ import {
   createEpisode,
   deleteEpisode,
   fetchPodcast,
-  toggleListenStatus,
   updateEpisode,
+  updateListenStatus,
   updatePodcast,
 } from '../api/podcasts';
-import type { Episode, EpisodeFormData, PodcastFormData } from '../types';
+import type { Episode, EpisodeFormData, ListenStatus, PodcastFormData } from '../types';
 
 const EMPTY_EPISODE: EpisodeFormData = { title: '', recommendation: '' };
 
@@ -54,6 +55,11 @@ export default function PodcastDetailPage() {
   const [editingEpisode, setEditingEpisode] = useState<Episode | null>(null);
   const [podcastForm, setPodcastForm] = useState<PodcastFormData | null>(null);
   const [episodeForm, setEpisodeForm] = useState<EpisodeFormData>(EMPTY_EPISODE);
+  const [updatingEpisodeId, setUpdatingEpisodeId] = useState<number | null>(null);
+  const [errorSnackbar, setErrorSnackbar] = useState<{
+    open: boolean;
+    message: string;
+  }>({ open: false, message: '' });
 
   const { data: podcast, isLoading, error } = useQuery({
     queryKey: ['podcast', podcastId],
@@ -95,10 +101,23 @@ export default function PodcastDetailPage() {
   });
 
   const toggleListenMutation = useMutation({
-    mutationFn: toggleListenStatus,
+    mutationFn: ({ id, status }: { id: number; status: ListenStatus }) =>
+      updateListenStatus(id, status),
+    onMutate: ({ id }) => {
+      setUpdatingEpisodeId(id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['podcast', podcastId] });
       queryClient.invalidateQueries({ queryKey: ['all-episodes'] });
+    },
+    onError: (error) => {
+      setErrorSnackbar({
+        open: true,
+        message: error instanceof Error ? error.message : '更新收听状态失败，请重试',
+      });
+    },
+    onSettled: () => {
+      setUpdatingEpisodeId(null);
     },
   });
 
@@ -154,10 +173,12 @@ export default function PodcastDetailPage() {
 
   /**
    * 切换单集收听状态
-   * @param episodeId - 单集 ID
+   * @param episode - 单集对象
    */
-  function handleToggleListen(episodeId: number) {
-    toggleListenMutation.mutate(episodeId);
+  function handleToggleListen(episode: Episode) {
+    const targetStatus: ListenStatus =
+      episode.listen_status === '未收听' ? '已收听' : '未收听';
+    toggleListenMutation.mutate({ id: episode.id, status: targetStatus });
   }
 
   if (isLoading) {
@@ -244,11 +265,18 @@ export default function PodcastDetailPage() {
                     <Stack direction="row">
                       <IconButton
                         edge="end"
-                        color={episode.listened ? 'success' : 'default'}
-                        onClick={() => handleToggleListen(episode.id)}
-                        title={episode.listened ? '标记为未收听' : '标记为已收听'}
+                        color={episode.listen_status === '已收听' ? 'success' : 'default'}
+                        onClick={() => handleToggleListen(episode)}
+                        title={
+                          episode.listen_status === '已收听' ? '标记为未收听' : '标记为已收听'
+                        }
+                        disabled={updatingEpisodeId === episode.id}
                       >
-                        {episode.listened ? <CheckCircleIcon /> : <RadioButtonUncheckedIcon />}
+                        {episode.listen_status === '已收听' ? (
+                          <CheckCircleIcon />
+                        ) : (
+                          <RadioButtonUncheckedIcon />
+                        )}
                       </IconButton>
                       <IconButton edge="end" onClick={() => openEditEpisode(episode)}>
                         <EditIcon />
@@ -265,8 +293,8 @@ export default function PodcastDetailPage() {
                 >
                   <Stack direction="row" spacing={2} alignItems="center" sx={{ pr: 12 }}>
                     <Chip
-                      label={episode.listened ? '已收听' : '未收听'}
-                      color={episode.listened ? 'success' : 'default'}
+                      label={episode.listen_status}
+                      color={episode.listen_status === '已收听' ? 'success' : 'default'}
                       size="small"
                       variant="outlined"
                     />
@@ -382,6 +410,21 @@ export default function PodcastDetailPage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={errorSnackbar.open}
+        autoHideDuration={5000}
+        onClose={() => setErrorSnackbar({ ...errorSnackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          severity="error"
+          onClose={() => setErrorSnackbar({ ...errorSnackbar, open: false })}
+          sx={{ width: '100%' }}
+        >
+          {errorSnackbar.message}
+        </Alert>
+      </Snackbar>
     </>
   );
 }

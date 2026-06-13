@@ -40,7 +40,9 @@ def migrate_database() -> None:
     应用启动时执行数据库结构迁移。
     检测 podcasts 表是否缺少 is_favorited 字段，若缺少则添加，
     并将第一条播客设为已收藏。
-    检测 episodes 表是否缺少 listened 字段，若缺少则添加。
+    检测 episodes 表字段：
+    - 若存在旧的 listened 布尔字段，迁移为 listen_status 枚举字段
+    - 若缺少 listen_status 字段则添加
     """
     inspector = inspect(engine)
 
@@ -69,12 +71,24 @@ def migrate_database() -> None:
         return
 
     episode_columns = {col["name"] for col in inspector.get_columns("episodes")}
-    if "listened" in episode_columns:
-        return
 
-    with engine.begin() as conn:
-        conn.execute(
-            text(
-                "ALTER TABLE episodes ADD COLUMN listened BOOLEAN NOT NULL DEFAULT 0"
+    if "listened" in episode_columns and "listen_status" not in episode_columns:
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    "ALTER TABLE episodes ADD COLUMN listen_status TEXT NOT NULL DEFAULT '未收听'"
+                )
             )
-        )
+            conn.execute(
+                text(
+                    "UPDATE episodes SET listen_status = CASE WHEN listened = 1 THEN '已收听' ELSE '未收听' END"
+                )
+            )
+            conn.execute(text("ALTER TABLE episodes DROP COLUMN listened"))
+    elif "listen_status" not in episode_columns:
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    "ALTER TABLE episodes ADD COLUMN listen_status TEXT NOT NULL DEFAULT '未收听'"
+                )
+            )

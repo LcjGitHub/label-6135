@@ -1,3 +1,6 @@
+/** 单集收听状态 */
+export type ListenStatus = '未收听' | '已收听';
+
 /** 播客实体 */
 export interface Podcast {
   id: number;
@@ -15,7 +18,7 @@ export interface Episode {
   podcast_id: number;
   title: string;
   recommendation: string | null;
-  listened: boolean;
+  listen_status: ListenStatus;
 }
 
 /** 单集实体（含所属播客信息） */
@@ -25,7 +28,7 @@ export interface EpisodeWithPodcast {
   title: string;
   recommendation: string | null;
   podcast_name: string;
-  listened: boolean;
+  listen_status: ListenStatus;
 }
 
 /** 播客详情（含单集） */

@@ -8,8 +8,10 @@ from sqlalchemy.orm import Session
 
 import models
 from database import Base, engine, get_db, migrate_database
+from models import ListenStatus
 from schemas import (
     EpisodeCreate,
+    EpisodeListenStatusUpdate,
     EpisodeResponse,
     EpisodeUpdate,
     EpisodeWithPodcastResponse,
@@ -61,7 +63,7 @@ def list_all_episodes(db: Session = Depends(get_db)):
             models.Episode.podcast_id,
             models.Episode.title,
             models.Episode.recommendation,
-            models.Episode.listened,
+            models.Episode.listen_status,
             models.Podcast.name.label("podcast_name"),
         )
         .join(models.Podcast, models.Episode.podcast_id == models.Podcast.id)
@@ -75,7 +77,7 @@ def list_all_episodes(db: Session = Depends(get_db)):
             "title": row.title,
             "recommendation": row.recommendation,
             "podcast_name": row.podcast_name,
-            "listened": row.listened,
+            "listen_status": row.listen_status.value if row.listen_status else "未收听",
         }
         for row in rows
     ]
@@ -231,13 +233,19 @@ def delete_episode(episode_id: int, db: Session = Depends(get_db)):
     db.commit()
 
 
-@app.patch("/api/episodes/{episode_id}/listen", response_model=EpisodeResponse)
-def toggle_listen_status(episode_id: int, db: Session = Depends(get_db)):
-    """切换单集收听状态（未收听/已收听）。"""
+@app.put("/api/episodes/{episode_id}/listen-status", response_model=EpisodeResponse)
+def update_listen_status(
+    episode_id: int,
+    payload: EpisodeListenStatusUpdate,
+    db: Session = Depends(get_db),
+):
+    """更新单集收听状态（未收听/已收听）。"""
     episode = db.query(models.Episode).filter(models.Episode.id == episode_id).first()
     if not episode:
         raise HTTPException(status_code=404, detail="单集不存在")
-    episode.listened = not episode.listened
+    episode.listen_status = (
+        ListenStatus.LISTENED if payload.listen_status == "已收听" else ListenStatus.UNLISTENED
+    )
     db.commit()
     db.refresh(episode)
     return episode

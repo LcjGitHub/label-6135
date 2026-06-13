@@ -2,13 +2,15 @@
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from models import ListenStatus
+
 
 class EpisodeBase(BaseModel):
     """单集公共字段。"""
 
     title: str = Field(..., min_length=1, max_length=300)
     recommendation: str | None = None
-    listened: bool = False
+    listen_status: str = "未收听"
 
 
 class EpisodeCreate(EpisodeBase):
@@ -20,13 +22,19 @@ class EpisodeUpdate(BaseModel):
 
     title: str | None = Field(None, min_length=1, max_length=300)
     recommendation: str | None = None
-    listened: bool | None = None
+    listen_status: str | None = None
+
+
+class EpisodeListenStatusUpdate(BaseModel):
+    """更新单集收听状态。"""
+
+    listen_status: str = Field(..., pattern="^(未收听|已收听)$")
 
 
 class EpisodeResponse(EpisodeBase):
     """单集响应。"""
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
 
     id: int
     podcast_id: int
@@ -35,12 +43,12 @@ class EpisodeResponse(EpisodeBase):
 class EpisodeWithPodcastResponse(EpisodeBase):
     """单集响应（含所属播客信息）。"""
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
 
     id: int
     podcast_id: int
     podcast_name: str
-    listened: bool = False
+    listen_status: str = "未收听"
 
 
 class PodcastBase(BaseModel):

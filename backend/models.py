@@ -1,11 +1,19 @@
 """SQLAlchemy ORM 模型。"""
 
+import enum
 from dataclasses import dataclass
 
-from sqlalchemy import Boolean, Float, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Boolean, Enum, Float, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
 
 from database import Base
+
+
+class ListenStatus(enum.Enum):
+    """单集收听状态。"""
+
+    UNLISTENED = "未收听"
+    LISTENED = "已收听"
 
 
 @dataclass
@@ -97,6 +105,10 @@ class Episode(Base):
     )
     title: Mapped[str] = mapped_column(String(300), nullable=False)
     recommendation: Mapped[str | None] = mapped_column(Text, nullable=True)
-    listened: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    listen_status: Mapped[ListenStatus] = mapped_column(
+        Enum(ListenStatus, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=ListenStatus.UNLISTENED,
+    )
 
     podcast: Mapped["Podcast"] = relationship("Podcast", back_populates="episodes")

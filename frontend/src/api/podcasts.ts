@@ -3,6 +3,7 @@ import type {
   Episode,
   EpisodeFormData,
   EpisodeWithPodcast,
+  ListenStatus,
   Podcast,
   PodcastDetail,
   PodcastFormData,
@@ -89,9 +90,14 @@ export async function deleteEpisode(id: number): Promise<void> {
   await api.delete(`/episodes/${id}`);
 }
 
-/** 切换单集收听状态 */
-export async function toggleListenStatus(id: number): Promise<Episode> {
-  const { data } = await api.patch<Episode>(`/episodes/${id}/listen`);
+/** 更新单集收听状态 */
+export async function updateListenStatus(
+  id: number,
+  listenStatus: ListenStatus,
+): Promise<Episode> {
+  const { data } = await api.put<Episode>(`/episodes/${id}/listen-status`, {
+    listen_status: listenStatus,
+  });
   return data;
 }
 
