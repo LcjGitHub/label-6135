@@ -2,6 +2,7 @@ import {
   Alert,
   Box,
   Card,
+  CardActionArea,
   CardContent,
   Chip,
   CircularProgress,
@@ -12,15 +13,21 @@ import {
 import PodcastsIcon from '@mui/icons-material/Podcasts';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { fetchStats } from '../api/podcasts';
 import type { PlatformStats } from '../types';
 
 /** 统计概览页 */
 export default function StatisticsPage() {
+  const navigate = useNavigate();
   const { data: stats, isLoading, error } = useQuery({
     queryKey: ['stats'],
     queryFn: fetchStats,
   });
+
+  function handlePlatformClick(platform: string) {
+    navigate(`/?platform=${encodeURIComponent(platform)}`);
+  }
 
   if (isLoading) {
     return (
@@ -133,26 +140,28 @@ export default function StatisticsPage() {
         >
           {stats?.platform_stats?.map((item: PlatformStats) => (
             <Card key={item.platform} variant="outlined">
-              <CardContent>
-                <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                  <Chip label={item.platform} color="primary" variant="outlined" />
-                </Stack>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  播客数量
-                </Typography>
-                <Typography variant="h5" fontWeight={600} gutterBottom mb={2}>
-                  {item.podcast_count} 档
-                </Typography>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  平均评分
-                </Typography>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <Rating value={item.avg_rating / 2} precision={0.5} readOnly size="small" />
-                  <Typography variant="body1" fontWeight={600}>
-                    {item.avg_rating.toFixed(1)}
+              <CardActionArea onClick={() => handlePlatformClick(item.platform)} sx={{ height: '100%' }}>
+                <CardContent>
+                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                    <Chip label={item.platform} color="primary" variant="outlined" />
+                  </Stack>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    播客数量
                   </Typography>
-                </Stack>
-              </CardContent>
+                  <Typography variant="h5" fontWeight={600} gutterBottom mb={2}>
+                    {item.podcast_count} 档
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    平均评分
+                  </Typography>
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <Rating value={item.avg_rating / 2} precision={0.5} readOnly size="small" />
+                    <Typography variant="body1" fontWeight={600}>
+                      {item.avg_rating.toFixed(1)}
+                    </Typography>
+                  </Stack>
+                </CardContent>
+              </CardActionArea>
             </Card>
           ))}
         </Box>

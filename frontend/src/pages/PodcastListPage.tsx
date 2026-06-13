@@ -33,7 +33,7 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import SearchIcon from '@mui/icons-material/Search';
 import dayjs from 'dayjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import {
   createPodcast,
   deletePodcast,
@@ -57,14 +57,22 @@ const EMPTY_FORM: PodcastFormData = {
 /** 播客列表页 */
 export default function PodcastListPage() {
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Podcast | null>(null);
   const [form, setForm] = useState<PodcastFormData>(EMPTY_FORM);
   const [favoritedOnly, setFavoritedOnly] = useState(false);
-  const [selectedPlatform, setSelectedPlatform] = useState('');
+  const [selectedPlatform, setSelectedPlatform] = useState(searchParams.get('platform') || '');
   const [searchInput, setSearchInput] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
   const [ratingSort, setRatingSort] = useState<RatingSort>('none');
+
+  useEffect(() => {
+    const platformParam = searchParams.get('platform');
+    if (platformParam) {
+      setSelectedPlatform(platformParam);
+    }
+  }, [searchParams]);
 
   const { data: platforms = [] } = useQuery({
     queryKey: ['platforms'],
@@ -222,7 +230,15 @@ export default function PodcastListPage() {
             labelId="platform-filter-label"
             value={selectedPlatform}
             label="平台筛选"
-            onChange={(e) => setSelectedPlatform(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSelectedPlatform(value);
+              if (value) {
+                setSearchParams({ platform: value }, { replace: true });
+              } else {
+                setSearchParams({}, { replace: true });
+              }
+            }}
           >
             <MenuItem value="">全部平台</MenuItem>
             {platforms.map((p) => (
