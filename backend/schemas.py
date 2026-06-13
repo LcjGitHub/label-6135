@@ -8,6 +8,7 @@ class EpisodeBase(BaseModel):
 
     title: str = Field(..., min_length=1, max_length=300)
     recommendation: str | None = None
+    listened: bool = False
 
 
 class EpisodeCreate(EpisodeBase):
@@ -19,6 +20,7 @@ class EpisodeUpdate(BaseModel):
 
     title: str | None = Field(None, min_length=1, max_length=300)
     recommendation: str | None = None
+    listened: bool | None = None
 
 
 class EpisodeResponse(EpisodeBase):
@@ -38,6 +40,7 @@ class EpisodeWithPodcastResponse(EpisodeBase):
     id: int
     podcast_id: int
     podcast_name: str
+    listened: bool = False
 
 
 class PodcastBase(BaseModel):

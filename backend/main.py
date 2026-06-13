@@ -61,6 +61,7 @@ def list_all_episodes(db: Session = Depends(get_db)):
             models.Episode.podcast_id,
             models.Episode.title,
             models.Episode.recommendation,
+            models.Episode.listened,
             models.Podcast.name.label("podcast_name"),
         )
         .join(models.Podcast, models.Episode.podcast_id == models.Podcast.id)
@@ -74,6 +75,7 @@ def list_all_episodes(db: Session = Depends(get_db)):
             "title": row.title,
             "recommendation": row.recommendation,
             "podcast_name": row.podcast_name,
+            "listened": row.listened,
         }
         for row in rows
     ]
@@ -227,6 +229,18 @@ def delete_episode(episode_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="单集不存在")
     db.delete(episode)
     db.commit()
+
+
+@app.patch("/api/episodes/{episode_id}/listen", response_model=EpisodeResponse)
+def toggle_listen_status(episode_id: int, db: Session = Depends(get_db)):
+    """切换单集收听状态（未收听/已收听）。"""
+    episode = db.query(models.Episode).filter(models.Episode.id == episode_id).first()
+    if not episode:
+        raise HTTPException(status_code=404, detail="单集不存在")
+    episode.listened = not episode.listened
+    db.commit()
+    db.refresh(episode)
+    return episode
 
 
 if __name__ == "__main__":

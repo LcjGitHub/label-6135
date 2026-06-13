@@ -89,6 +89,12 @@ export async function deleteEpisode(id: number): Promise<void> {
   await api.delete(`/episodes/${id}`);
 }
 
+/** 切换单集收听状态 */
+export async function toggleListenStatus(id: number): Promise<Episode> {
+  const { data } = await api.patch<Episode>(`/episodes/${id}/listen`);
+  return data;
+}
+
 /** 获取统计概览 */
 export async function fetchStats(): Promise<Stats> {
   const { data } = await api.get<Stats>('/stats');

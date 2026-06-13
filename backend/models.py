@@ -97,5 +97,6 @@ class Episode(Base):
     )
     title: Mapped[str] = mapped_column(String(300), nullable=False)
     recommendation: Mapped[str | None] = mapped_column(Text, nullable=True)
+    listened: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     podcast: Mapped["Podcast"] = relationship("Podcast", back_populates="episodes")

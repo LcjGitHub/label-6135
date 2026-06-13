@@ -63,14 +63,21 @@ export default function EpisodeListPage() {
             disablePadding
             divider
             secondaryAction={
-              <Chip
-                icon={<PodcastsIcon fontSize="small" />}
-                label={`#${episode.podcast_id} ${episode.podcast_name}`}
-                color="primary"
-                variant="outlined"
-                size="small"
-                sx={{ mr: 1 }}
-              />
+              <Stack direction="row" spacing={1}>
+                <Chip
+                  label={episode.listened ? '已收听' : '未收听'}
+                  color={episode.listened ? 'success' : 'default'}
+                  size="small"
+                  variant="outlined"
+                />
+                <Chip
+                  icon={<PodcastsIcon fontSize="small" />}
+                  label={`#${episode.podcast_id} ${episode.podcast_name}`}
+                  color="primary"
+                  variant="outlined"
+                  size="small"
+                />
+              </Stack>
             }
           >
             <ListItemButton onClick={() => handleEpisodeClick(episode)}>

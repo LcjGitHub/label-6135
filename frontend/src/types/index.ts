@@ -15,6 +15,7 @@ export interface Episode {
   podcast_id: number;
   title: string;
   recommendation: string | null;
+  listened: boolean;
 }
 
 /** 单集实体（含所属播客信息） */
@@ -24,6 +25,7 @@ export interface EpisodeWithPodcast {
   title: string;
   recommendation: string | null;
   podcast_name: string;
+  listened: boolean;
 }
 
 /** 播客详情（含单集） */

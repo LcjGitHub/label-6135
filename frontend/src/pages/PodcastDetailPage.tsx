@@ -23,8 +23,10 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import dayjs from 'dayjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
@@ -32,6 +34,7 @@ import {
   createEpisode,
   deleteEpisode,
   fetchPodcast,
+  toggleListenStatus,
   updateEpisode,
   updatePodcast,
 } from '../api/podcasts';
@@ -91,6 +94,14 @@ export default function PodcastDetailPage() {
     },
   });
 
+  const toggleListenMutation = useMutation({
+    mutationFn: toggleListenStatus,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['podcast', podcastId] });
+      queryClient.invalidateQueries({ queryKey: ['all-episodes'] });
+    },
+  });
+
   /** 打开播客编辑对话框 */
   function openPodcastEdit() {
     if (!podcast) return;
@@ -139,6 +150,14 @@ export default function PodcastDetailPage() {
     if (window.confirm(`确定删除单集「${episode.title}」？`)) {
       removeEpisodeMutation.mutate(episode.id);
     }
+  }
+
+  /**
+   * 切换单集收听状态
+   * @param episodeId - 单集 ID
+   */
+  function handleToggleListen(episodeId: number) {
+    toggleListenMutation.mutate(episodeId);
   }
 
   if (isLoading) {
@@ -223,6 +242,14 @@ export default function PodcastDetailPage() {
                 <ListItem
                   secondaryAction={
                     <Stack direction="row">
+                      <IconButton
+                        edge="end"
+                        color={episode.listened ? 'success' : 'default'}
+                        onClick={() => handleToggleListen(episode.id)}
+                        title={episode.listened ? '标记为未收听' : '标记为已收听'}
+                      >
+                        {episode.listened ? <CheckCircleIcon /> : <RadioButtonUncheckedIcon />}
+                      </IconButton>
                       <IconButton edge="end" onClick={() => openEditEpisode(episode)}>
                         <EditIcon />
                       </IconButton>
@@ -236,11 +263,19 @@ export default function PodcastDetailPage() {
                     </Stack>
                   }
                 >
-                  <ListItemText
-                    primary={episode.title}
-                    secondary={episode.recommendation || '暂无推荐语'}
-                    primaryTypographyProps={{ fontWeight: 500 }}
-                  />
+                  <Stack direction="row" spacing={2} alignItems="center" sx={{ pr: 12 }}>
+                    <Chip
+                      label={episode.listened ? '已收听' : '未收听'}
+                      color={episode.listened ? 'success' : 'default'}
+                      size="small"
+                      variant="outlined"
+                    />
+                    <ListItemText
+                      primary={episode.title}
+                      secondary={episode.recommendation || '暂无推荐语'}
+                      primaryTypographyProps={{ fontWeight: 500 }}
+                    />
+                  </Stack>
                 </ListItem>
               </Box>
             ))}
