@@ -154,12 +154,15 @@ export default function StatisticsPage() {
                   <Typography variant="body2" color="text.secondary" gutterBottom>
                     平均评分
                   </Typography>
-                  <Stack direction="row" alignItems="center" spacing={1}>
+                  <Stack direction="row" alignItems="center" spacing={1} mb={2}>
                     <Rating value={item.avg_rating / 2} precision={0.5} readOnly size="small" />
                     <Typography variant="body1" fontWeight={600}>
                       {item.avg_rating.toFixed(1)}
                     </Typography>
                   </Stack>
+                  <Typography variant="caption" color="primary" sx={{ display: 'flex', alignItems: 'center' }}>
+                    点击查看该平台播客 →
+                  </Typography>
                 </CardContent>
               </CardActionArea>
             </Card>

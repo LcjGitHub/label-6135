@@ -69,9 +69,7 @@ export default function PodcastListPage() {
 
   useEffect(() => {
     const platformParam = searchParams.get('platform');
-    if (platformParam) {
-      setSelectedPlatform(platformParam);
-    }
+    setSelectedPlatform(platformParam || '');
   }, [searchParams]);
 
   const { data: platforms = [] } = useQuery({
