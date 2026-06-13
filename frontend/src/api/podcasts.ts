@@ -58,6 +58,7 @@ export async function createPodcast(payload: PodcastFormData): Promise<Podcast> 
   const { data } = await api.post<Podcast>('/podcasts', {
     ...payload,
     notes: payload.notes || null,
+    subscribe_url: payload.subscribe_url || null,
   });
   return data;
 }
@@ -70,6 +71,7 @@ export async function updatePodcast(
   const { data } = await api.put<Podcast>(`/podcasts/${id}`, {
     ...payload,
     notes: payload.notes === '' ? null : payload.notes,
+    subscribe_url: payload.subscribe_url === '' ? null : payload.subscribe_url,
   });
   return data;
 }

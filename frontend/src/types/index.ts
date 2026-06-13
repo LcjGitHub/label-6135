@@ -9,6 +9,7 @@ export interface Podcast {
   theme: string;
   rating: number;
   notes: string | null;
+  subscribe_url: string | null;
   is_favorited: boolean;
 }
 
@@ -43,6 +44,7 @@ export interface PodcastFormData {
   theme: string;
   rating: number;
   notes: string;
+  subscribe_url: string;
 }
 
 /** 创建/更新单集表单 */

@@ -15,6 +15,7 @@ import {
   FormControl,
   IconButton,
   InputLabel,
+  Link,
   MenuItem,
   Rating,
   Select,
@@ -50,6 +51,7 @@ const EMPTY_FORM: PodcastFormData = {
   theme: '',
   rating: 8,
   notes: '',
+  subscribe_url: '',
 };
 
 /** 播客列表页 */
@@ -130,6 +132,7 @@ export default function PodcastListPage() {
       theme: podcast.theme,
       rating: podcast.rating,
       notes: podcast.notes ?? '',
+      subscribe_url: podcast.subscribe_url ?? '',
     });
     setDialogOpen(true);
   }
@@ -343,6 +346,19 @@ export default function PodcastListPage() {
                         {podcast.notes}
                       </Typography>
                     )}
+                    {podcast.subscribe_url && (
+                      <Link
+                        href={podcast.subscribe_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        variant="body2"
+                        component="a"
+                        onClick={(e) => e.stopPropagation()}
+                        sx={{ mt: 1, display: 'inline-block' }}
+                      >
+                        订阅链接 →
+                      </Link>
+                    )}
                   </CardContent>
                 </CardActionArea>
               </Card>
@@ -392,6 +408,13 @@ export default function PodcastListPage() {
               minRows={2}
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
+            />
+            <TextField
+              label="订阅链接"
+              fullWidth
+              placeholder="输入播客订阅地址 URL"
+              value={form.subscribe_url}
+              onChange={(e) => setForm({ ...form, subscribe_url: e.target.value })}
             />
           </Stack>
         </DialogContent>

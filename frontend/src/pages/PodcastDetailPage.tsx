@@ -13,6 +13,7 @@ import {
   DialogTitle,
   Divider,
   IconButton,
+  Link,
   List,
   ListItem,
   ListItemText,
@@ -130,6 +131,7 @@ export default function PodcastDetailPage() {
       theme: podcast.theme,
       rating: podcast.rating,
       notes: podcast.notes ?? '',
+      subscribe_url: podcast.subscribe_url ?? '',
     });
     setPodcastDialogOpen(true);
   }
@@ -229,6 +231,20 @@ export default function PodcastDetailPage() {
                 <Typography variant="body1" color="text.secondary" paragraph>
                   {podcast.notes}
                 </Typography>
+              )}
+              {podcast.subscribe_url && (
+                <Box>
+                  <Link
+                    href={podcast.subscribe_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    variant="body1"
+                    component="a"
+                    sx={{ mb: 1, display: 'inline-block' }}
+                  >
+                    🔗 访问订阅链接
+                  </Link>
+                </Box>
               )}
               <Typography variant="caption" color="text.disabled">
                 浏览于 {dayjs().format('YYYY-MM-DD HH:mm')}
@@ -360,6 +376,13 @@ export default function PodcastDetailPage() {
                 minRows={2}
                 value={podcastForm.notes}
                 onChange={(e) => setPodcastForm({ ...podcastForm, notes: e.target.value })}
+              />
+              <TextField
+                label="订阅链接"
+                fullWidth
+                placeholder="输入播客订阅地址 URL"
+                value={podcastForm.subscribe_url}
+                onChange={(e) => setPodcastForm({ ...podcastForm, subscribe_url: e.target.value })}
               />
             </Stack>
           )}

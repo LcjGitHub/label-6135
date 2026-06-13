@@ -50,6 +50,13 @@ def migrate_database() -> None:
         return
 
     columns = {col["name"] for col in inspector.get_columns("podcasts")}
+    if "subscribe_url" not in columns:
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    "ALTER TABLE podcasts ADD COLUMN subscribe_url VARCHAR(500)"
+                )
+            )
     if "is_favorited" not in columns:
         with engine.begin() as conn:
             conn.execute(

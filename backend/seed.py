@@ -11,6 +11,7 @@ SEED_PODCASTS: list[dict] = [
         "theme": "前端工程与 Web 技术",
         "rating": 8.5,
         "notes": "适合通勤听，更新稳定，嘉宾质量高。",
+        "subscribe_url": "https://www.xiaoyuzhoufm.com/podcast/frontend-coffee",
         "is_favorited": True,
         "episodes": [
             {
@@ -29,6 +30,7 @@ SEED_PODCASTS: list[dict] = [
         "theme": "独立开发 / 产品 / 副业",
         "rating": 9.0,
         "notes": "访谈型节目，很多一线 indie hacker 的真实经历。",
+        "subscribe_url": "https://podcasts.apple.com/cn/podcast/indie-dev-radio",
         "is_favorited": False,
         "episodes": [
             {
@@ -47,6 +49,7 @@ SEED_PODCASTS: list[dict] = [
         "theme": "UI/UX 与设计系统",
         "rating": 7.8,
         "notes": "偏设计视角，对前端同学理解产品很有帮助。",
+        "subscribe_url": "https://music.163.com/#/djradio?id=99999999",
         "is_favorited": False,
         "episodes": [
             {
@@ -79,6 +82,7 @@ def seed_database(db: Session) -> None:
             theme=item["theme"],
             rating=item["rating"],
             notes=item["notes"],
+            subscribe_url=item.get("subscribe_url"),
             is_favorited=item.get("is_favorited", False),
         )
         db.add(podcast)

@@ -59,6 +59,7 @@ class PodcastBase(BaseModel):
     theme: str = Field(..., min_length=1, max_length=200)
     rating: float = Field(..., ge=0, le=10)
     notes: str | None = None
+    subscribe_url: str | None = None
     is_favorited: bool = False
 
 
@@ -74,6 +75,7 @@ class PodcastUpdate(BaseModel):
     theme: str | None = Field(None, min_length=1, max_length=200)
     rating: float | None = Field(None, ge=0, le=10)
     notes: str | None = None
+    subscribe_url: str | None = None
 
 
 class PodcastResponse(PodcastBase):
