@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from database import Base, engine, get_db, migrate_database
 from routers import (
+    data_router,
     episodes_router,
     listening_notes_router,
     podcasts_router,
@@ -47,6 +48,7 @@ app.include_router(podcasts_router)
 app.include_router(episodes_router)
 app.include_router(listening_notes_router)
 app.include_router(statistics_router)
+app.include_router(data_router)
 
 
 if __name__ == "__main__":

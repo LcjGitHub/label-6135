@@ -1,5 +1,6 @@
 """Pydantic 请求/响应模型。"""
 
+import enum
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -161,3 +162,58 @@ class ListeningNoteResponse(BaseModel):
     podcast_id: int
     content: str
     created_at: datetime
+
+
+class EpisodeExport(BaseModel):
+    """单集导出数据。"""
+
+    title: str = Field(..., min_length=1, max_length=300)
+    recommendation: str | None = None
+    duration: int | None = Field(None, ge=1)
+    listen_status: str = "未收听"
+
+
+class ListeningNoteExport(BaseModel):
+    """听感笔记导出数据。"""
+
+    content: str = Field(..., min_length=1)
+    created_at: str | None = None
+
+
+class PodcastExport(BaseModel):
+    """播客导出数据（含单集和听感笔记）。"""
+
+    name: str = Field(..., min_length=1, max_length=200)
+    platform: str = Field(..., min_length=1, max_length=100)
+    theme: str = Field(..., min_length=1, max_length=200)
+    rating: float = Field(..., ge=0, le=10)
+    notes: str | None = None
+    subscribe_url: str | None = None
+    is_favorited: bool = False
+    episodes: list[EpisodeExport] = []
+    listening_notes: list[ListeningNoteExport] = []
+
+
+class ExportData(BaseModel):
+    """完整导出数据结构。"""
+
+    version: str = "1.0"
+    exported_at: str
+    podcasts: list[PodcastExport]
+
+
+class ImportResponse(BaseModel):
+    """导入结果响应。"""
+
+    success: bool
+    message: str
+    imported_podcasts: int
+    imported_episodes: int
+    imported_notes: int
+
+
+class ImportMode(str, enum.Enum):
+    """导入模式。"""
+
+    APPEND = "append"
+    OVERWRITE = "overwrite"

@@ -104,3 +104,15 @@ export interface ListeningNote {
 export interface ListeningNoteFormData {
   content: string;
 }
+
+/** 导入模式 */
+export type ImportMode = 'append' | 'overwrite';
+
+/** 导入结果响应 */
+export interface ImportResponse {
+  success: boolean;
+  message: string;
+  imported_podcasts: number;
+  imported_episodes: number;
+  imported_notes: number;
+}

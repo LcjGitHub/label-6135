@@ -4,6 +4,8 @@ import type {
   Episode,
   EpisodeFormData,
   EpisodeWithPodcast,
+  ImportMode,
+  ImportResponse,
   ListenStatus,
   ListeningNote,
   ListeningNoteFormData,
@@ -217,4 +219,49 @@ export async function updateListeningNote(
 /** 删除听感笔记 */
 export async function deleteListeningNote(id: number): Promise<void> {
   await api.delete(`/listening-notes/${id}`);
+}
+
+/** 导出全部数据为 JSON 文件 */
+export async function exportAllData(): Promise<void> {
+  const response = await api.get('/data/export', {
+    responseType: 'blob',
+  });
+  
+  const blob = new Blob([response.data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  
+  const contentDisposition = response.headers['content-disposition'];
+  let filename = `podcast_export_${new Date().toISOString().slice(0, 10)}.json`;
+  if (contentDisposition) {
+    const match = contentDisposition.match(/filename=(.+)/);
+    if (match) {
+      filename = match[1];
+    }
+  }
+  
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/** 导入数据文件 */
+export async function importData(
+  file: File,
+  mode: ImportMode,
+): Promise<ImportResponse> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('mode', mode);
+  
+  const { data } = await api.post<ImportResponse>('/data/import', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  
+  return data;
 }
