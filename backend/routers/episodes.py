@@ -22,6 +22,7 @@ router = APIRouter(tags=["单集"])
 def list_all_episodes(
     db: Session = Depends(get_db),
     listen_status: str | None = Query(None, pattern="^(未收听|已收听)$"),
+    keyword: str | None = Query(None, min_length=1, max_length=300),
 ):
     query = db.query(
         models.Episode.id,
@@ -38,6 +39,9 @@ def list_all_episodes(
             ListenStatus.LISTENED if listen_status == "已收听" else ListenStatus.UNLISTENED
         )
         query = query.filter(models.Episode.listen_status == target_status)
+
+    if keyword:
+        query = query.filter(models.Episode.title.contains(keyword))
 
     rows = query.order_by(models.Episode.id).all()
     return [

@@ -188,13 +188,17 @@ export async function fetchEpisodes(
   return data;
 }
 
-/** 获取全部单集列表（跨播客，支持按收听状态筛选） */
+/** 获取全部单集列表（跨播客，支持按收听状态筛选和标题关键词搜索） */
 export async function fetchAllEpisodes(
   listenStatus?: '未收听' | '已收听',
+  keyword?: string,
 ): Promise<EpisodeWithPodcast[]> {
   const params: Record<string, string> = {};
   if (listenStatus) {
     params.listen_status = listenStatus;
+  }
+  if (keyword) {
+    params.keyword = keyword;
   }
   const { data } = await api.get<EpisodeWithPodcast[]>('/episodes', { params });
   return data;

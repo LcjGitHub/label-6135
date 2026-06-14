@@ -15,6 +15,7 @@ import {
   ListItemText,
   Snackbar,
   Stack,
+  TextField,
   Tooltip,
   Typography,
 } from '@mui/material';
@@ -23,6 +24,7 @@ import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import TimerIcon from '@mui/icons-material/Timer';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CloseIcon from '@mui/icons-material/Close';
+import SearchIcon from '@mui/icons-material/Search';
 import dayjs from 'dayjs';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -40,14 +42,27 @@ export default function EpisodeListPage() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [listenStatusFilter, setListenStatusFilter] = useState<ListenStatusFilter>('全部');
+  const [searchInput, setSearchInput] = useState('');
+  const [searchKeyword, setSearchKeyword] = useState('');
 
   const { data: episodes, isLoading, error } = useQuery({
-    queryKey: ['all-episodes', listenStatusFilter],
+    queryKey: ['all-episodes', listenStatusFilter, searchKeyword],
     queryFn: () =>
       fetchAllEpisodes(
         listenStatusFilter === '全部' ? undefined : listenStatusFilter,
+        searchKeyword || undefined,
       ),
   });
+
+  function handleSearch() {
+    setSearchKeyword(searchInput.trim());
+  }
+
+  function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  }
 
   function handleEpisodeClick(episode: EpisodeWithPodcast) {
     navigate(`/podcasts/${episode.podcast_id}`);
@@ -117,7 +132,7 @@ export default function EpisodeListPage() {
         </Tooltip>
       </Stack>
 
-      <Box mb={3}>
+      <Stack direction="row" spacing={2} mb={3} alignItems="center" flexWrap="wrap" useFlexGap>
         <ButtonGroup size="small" aria-label="收听状态筛选">
           {filterOptions.map((option) => (
             <Button
@@ -129,7 +144,29 @@ export default function EpisodeListPage() {
             </Button>
           ))}
         </ButtonGroup>
-      </Box>
+        <TextField
+          size="small"
+          label="标题搜索"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          onKeyDown={handleSearchKeyDown}
+          placeholder="输入关键词搜索单集标题..."
+          sx={{ minWidth: 260 }}
+          slotProps={{
+            input: {
+              startAdornment: <SearchIcon color="action" sx={{ mr: 1, fontSize: 20 }} />,
+            },
+          }}
+        />
+        <Button
+          size="small"
+          variant="contained"
+          startIcon={<SearchIcon />}
+          onClick={handleSearch}
+        >
+          搜索
+        </Button>
+      </Stack>
 
       {recommendation && (
         <Card sx={{ mb: 3, bgcolor: 'primary.50', border: '1px solid', borderColor: 'primary.200' }}>
