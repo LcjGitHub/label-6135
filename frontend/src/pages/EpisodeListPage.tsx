@@ -2,6 +2,7 @@ import {
   Alert,
   Box,
   Button,
+  ButtonGroup,
   Card,
   CardActions,
   CardContent,
@@ -29,6 +30,8 @@ import { useNavigate } from 'react-router-dom';
 import { fetchAllEpisodes, fetchRandomUnlistenedEpisode } from '../api/podcasts';
 import type { EpisodeWithPodcast, RandomEpisodeRecommendation } from '../types';
 
+type ListenStatusFilter = '全部' | '未收听' | '已收听';
+
 /** 单集总览页 */
 export default function EpisodeListPage() {
   const navigate = useNavigate();
@@ -36,10 +39,14 @@ export default function EpisodeListPage() {
   const [isRecommending, setIsRecommending] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [listenStatusFilter, setListenStatusFilter] = useState<ListenStatusFilter>('全部');
 
   const { data: episodes, isLoading, error } = useQuery({
-    queryKey: ['all-episodes'],
-    queryFn: fetchAllEpisodes,
+    queryKey: ['all-episodes', listenStatusFilter],
+    queryFn: () =>
+      fetchAllEpisodes(
+        listenStatusFilter === '全部' ? undefined : listenStatusFilter,
+      ),
   });
 
   function handleEpisodeClick(episode: EpisodeWithPodcast) {
@@ -80,6 +87,12 @@ export default function EpisodeListPage() {
     return <Alert severity="error">加载失败，请确认后端已在 7000 端口启动。</Alert>;
   }
 
+  const filterOptions: ListenStatusFilter[] = ['全部', '未收听', '已收听'];
+
+  function handleFilterChange(filter: ListenStatusFilter) {
+    setListenStatusFilter(filter);
+  }
+
   return (
     <>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
@@ -103,6 +116,20 @@ export default function EpisodeListPage() {
           </Button>
         </Tooltip>
       </Stack>
+
+      <Box mb={3}>
+        <ButtonGroup size="small" aria-label="收听状态筛选">
+          {filterOptions.map((option) => (
+            <Button
+              key={option}
+              variant={listenStatusFilter === option ? 'contained' : 'outlined'}
+              onClick={() => handleFilterChange(option)}
+            >
+              {option}
+            </Button>
+          ))}
+        </ButtonGroup>
+      </Box>
 
       {recommendation && (
         <Card sx={{ mb: 3, bgcolor: 'primary.50', border: '1px solid', borderColor: 'primary.200' }}>

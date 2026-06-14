@@ -19,21 +19,27 @@ router = APIRouter(tags=["单集"])
 
 
 @router.get("/api/episodes", response_model=list[EpisodeWithPodcastResponse])
-def list_all_episodes(db: Session = Depends(get_db)):
-    rows = (
-        db.query(
-            models.Episode.id,
-            models.Episode.podcast_id,
-            models.Episode.title,
-            models.Episode.recommendation,
-            models.Episode.duration,
-            models.Episode.listen_status,
-            models.Podcast.name.label("podcast_name"),
+def list_all_episodes(
+    db: Session = Depends(get_db),
+    listen_status: str | None = Query(None, pattern="^(未收听|已收听)$"),
+):
+    query = db.query(
+        models.Episode.id,
+        models.Episode.podcast_id,
+        models.Episode.title,
+        models.Episode.recommendation,
+        models.Episode.duration,
+        models.Episode.listen_status,
+        models.Podcast.name.label("podcast_name"),
+    ).join(models.Podcast, models.Episode.podcast_id == models.Podcast.id)
+
+    if listen_status:
+        target_status = (
+            ListenStatus.LISTENED if listen_status == "已收听" else ListenStatus.UNLISTENED
         )
-        .join(models.Podcast, models.Episode.podcast_id == models.Podcast.id)
-        .order_by(models.Episode.id)
-        .all()
-    )
+        query = query.filter(models.Episode.listen_status == target_status)
+
+    rows = query.order_by(models.Episode.id).all()
     return [
         {
             "id": row.id,

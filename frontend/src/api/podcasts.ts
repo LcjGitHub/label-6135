@@ -171,9 +171,15 @@ export async function fetchEpisodes(
   return data;
 }
 
-/** 获取全部单集列表（跨播客） */
-export async function fetchAllEpisodes(): Promise<EpisodeWithPodcast[]> {
-  const { data } = await api.get<EpisodeWithPodcast[]>('/episodes');
+/** 获取全部单集列表（跨播客，支持按收听状态筛选） */
+export async function fetchAllEpisodes(
+  listenStatus?: '未收听' | '已收听',
+): Promise<EpisodeWithPodcast[]> {
+  const params: Record<string, string> = {};
+  if (listenStatus) {
+    params.listen_status = listenStatus;
+  }
+  const { data } = await api.get<EpisodeWithPodcast[]>('/episodes', { params });
   return data;
 }
 

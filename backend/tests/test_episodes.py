@@ -54,6 +54,43 @@ class TestListAllEpisodes:
         assert item["listen_status"] == "已收听"
         assert item["podcast_name"] == "完整字段播客"
 
+    def test_list_all_episodes_filter_unlistened(self, client, make_podcast, make_episode):
+        p1 = make_podcast(name="播客一")
+        make_episode(podcast_id=p1.id, title="未收听单集A", listen_status=ListenStatus.UNLISTENED)
+        make_episode(podcast_id=p1.id, title="已收听单集B", listen_status=ListenStatus.LISTENED)
+        make_episode(podcast_id=p1.id, title="未收听单集C", listen_status=ListenStatus.UNLISTENED)
+
+        response = client.get("/api/episodes", params={"listen_status": "未收听"})
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 2
+        assert data[0]["title"] == "未收听单集A"
+        assert data[0]["listen_status"] == "未收听"
+        assert data[1]["title"] == "未收听单集C"
+        assert data[1]["listen_status"] == "未收听"
+
+    def test_list_all_episodes_filter_listened(self, client, make_podcast, make_episode):
+        p1 = make_podcast(name="播客一")
+        make_episode(podcast_id=p1.id, title="未收听单集A", listen_status=ListenStatus.UNLISTENED)
+        make_episode(podcast_id=p1.id, title="已收听单集B", listen_status=ListenStatus.LISTENED)
+        make_episode(podcast_id=p1.id, title="已收听单集C", listen_status=ListenStatus.LISTENED)
+
+        response = client.get("/api/episodes", params={"listen_status": "已收听"})
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 2
+        assert data[0]["title"] == "已收听单集B"
+        assert data[0]["listen_status"] == "已收听"
+        assert data[1]["title"] == "已收听单集C"
+        assert data[1]["listen_status"] == "已收听"
+
+    def test_list_all_episodes_filter_invalid_status(self, client, make_podcast, make_episode):
+        p1 = make_podcast(name="播客一")
+        make_episode(podcast_id=p1.id, title="测试单集")
+
+        response = client.get("/api/episodes", params={"listen_status": "无效状态"})
+        assert response.status_code == 422
+
 
 class TestCreateEpisode:
     def test_create_episode_success(self, client, db_session, make_podcast):
