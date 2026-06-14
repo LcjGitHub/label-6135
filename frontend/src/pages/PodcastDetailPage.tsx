@@ -33,6 +33,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import SearchIcon from '@mui/icons-material/Search';
+import TimerIcon from '@mui/icons-material/Timer';
 import dayjs from 'dayjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
@@ -48,7 +49,7 @@ import {
 } from '../api/podcasts';
 import type { Episode, EpisodeFormData, ListenStatus, PodcastFormData } from '../types';
 
-const EMPTY_EPISODE: EpisodeFormData = { title: '', recommendation: '' };
+const EMPTY_EPISODE: EpisodeFormData = { title: '', recommendation: '', duration: '' };
 
 /** 播客详情页（含单集列表） */
 export default function PodcastDetailPage() {
@@ -216,6 +217,7 @@ export default function PodcastDetailPage() {
     setEpisodeForm({
       title: episode.title,
       recommendation: episode.recommendation ?? '',
+      duration: episode.duration != null ? String(episode.duration) : '',
     });
     setEpisodeDialogOpen(true);
   }
@@ -443,6 +445,14 @@ export default function PodcastDetailPage() {
                       size="small"
                       variant="outlined"
                     />
+                    {episode.duration != null && (
+                      <Chip
+                        icon={<TimerIcon fontSize="small" />}
+                        label={`${episode.duration} 分钟`}
+                        size="small"
+                        variant="outlined"
+                      />
+                    )}
                     <ListItemText
                       primary={episode.title}
                       secondary={episode.recommendation || '暂无推荐语'}
@@ -547,6 +557,16 @@ export default function PodcastDetailPage() {
               value={episodeForm.recommendation}
               onChange={(e) =>
                 setEpisodeForm({ ...episodeForm, recommendation: e.target.value })
+              }
+            />
+            <TextField
+              label="时长（分钟）"
+              type="number"
+              fullWidth
+              inputProps={{ min: 1, step: 1 }}
+              value={episodeForm.duration}
+              onChange={(e) =>
+                setEpisodeForm({ ...episodeForm, duration: e.target.value })
               }
             />
           </Stack>

@@ -10,6 +10,7 @@ class EpisodeBase(BaseModel):
 
     title: str = Field(..., min_length=1, max_length=300)
     recommendation: str | None = None
+    duration: int | None = Field(None, ge=1)
     listen_status: str = "未收听"
 
 
@@ -22,6 +23,7 @@ class EpisodeUpdate(BaseModel):
 
     title: str | None = Field(None, min_length=1, max_length=300)
     recommendation: str | None = None
+    duration: int | None = Field(None, ge=1)
     listen_status: str | None = None
 
 
@@ -55,6 +57,7 @@ class EpisodeWithPodcastResponse(EpisodeBase):
     id: int
     podcast_id: int
     podcast_name: str
+    duration: int | None = None
     listen_status: str = "未收听"
 
 

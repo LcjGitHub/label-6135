@@ -25,6 +25,7 @@ export interface Episode {
   podcast_id: number;
   title: string;
   recommendation: string | null;
+  duration: number | null;
   listen_status: ListenStatus;
 }
 
@@ -34,6 +35,7 @@ export interface EpisodeWithPodcast {
   podcast_id: number;
   title: string;
   recommendation: string | null;
+  duration: number | null;
   podcast_name: string;
   listen_status: ListenStatus;
 }
@@ -57,6 +59,7 @@ export interface PodcastFormData {
 export interface EpisodeFormData {
   title: string;
   recommendation: string;
+  duration: string;
 }
 
 /** 平台统计数据 */

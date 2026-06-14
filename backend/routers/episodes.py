@@ -24,6 +24,7 @@ def list_all_episodes(db: Session = Depends(get_db)):
             models.Episode.podcast_id,
             models.Episode.title,
             models.Episode.recommendation,
+            models.Episode.duration,
             models.Episode.listen_status,
             models.Podcast.name.label("podcast_name"),
         )
@@ -37,6 +38,7 @@ def list_all_episodes(db: Session = Depends(get_db)):
             "podcast_id": row.podcast_id,
             "title": row.title,
             "recommendation": row.recommendation,
+            "duration": row.duration,
             "podcast_name": row.podcast_name,
             "listen_status": row.listen_status.value if row.listen_status else "未收听",
         }

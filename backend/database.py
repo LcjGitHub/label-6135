@@ -129,3 +129,11 @@ def migrate_database() -> None:
                     "OR listen_status = ''"
                 )
             )
+
+    if "duration" not in episode_columns:
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    "ALTER TABLE episodes ADD COLUMN duration INTEGER"
+                )
+            )

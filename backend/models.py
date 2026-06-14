@@ -50,6 +50,7 @@ class Episode(Base):
     )
     title: Mapped[str] = mapped_column(String(300), nullable=False)
     recommendation: Mapped[str | None] = mapped_column(Text, nullable=True)
+    duration: Mapped[int | None] = mapped_column(Integer, nullable=True)
     listen_status: Mapped[ListenStatus] = mapped_column(
         Enum(ListenStatus, values_callable=lambda x: [e.value for e in x]),
         nullable=False,

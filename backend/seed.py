@@ -17,10 +17,12 @@ SEED_PODCASTS: list[dict] = [
             {
                 "title": "React 19 新特性速览",
                 "recommendation": "想跟上 React 生态变化时必听的一期。",
+                "duration": 35,
             },
             {
                 "title": "CSS 容器查询实战",
                 "recommendation": "用真实项目案例讲清楚 container query 的用法。",
+                "duration": 28,
             },
         ],
     },
@@ -36,10 +38,12 @@ SEED_PODCASTS: list[dict] = [
             {
                 "title": "从 0 到 1 做 SaaS 的 12 个月",
                 "recommendation": "收入、获客、定价都讲得很具体，少空话。",
+                "duration": 52,
             },
             {
                 "title": "一人公司如何管理时间与精力",
                 "recommendation": "不是鸡汤，有可执行的日程与边界设置方法。",
+                "duration": 41,
             },
         ],
     },
@@ -55,10 +59,12 @@ SEED_PODCASTS: list[dict] = [
             {
                 "title": "MUI v6 设计 token 迁移笔记",
                 "recommendation": "设计和开发如何对齐 token，减少返工。",
+                "duration": 33,
             },
             {
                 "title": "信息架构入门：从导航到内容层级",
                 "recommendation": "做后台/内容型产品时特别实用的一期。",
+                "duration": 45,
             },
         ],
     },

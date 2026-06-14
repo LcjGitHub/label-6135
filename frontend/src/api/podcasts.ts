@@ -97,6 +97,7 @@ export async function createEpisode(
   const { data } = await api.post<Episode>(`/podcasts/${podcastId}/episodes`, {
     ...payload,
     recommendation: payload.recommendation || null,
+    duration: payload.duration ? Number(payload.duration) : null,
   });
   return data;
 }
@@ -109,6 +110,7 @@ export async function updateEpisode(
   const { data } = await api.put<Episode>(`/episodes/${id}`, {
     ...payload,
     recommendation: payload.recommendation === '' ? null : payload.recommendation,
+    duration: payload.duration ? Number(payload.duration) : null,
   });
   return data;
 }

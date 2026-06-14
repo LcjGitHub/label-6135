@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import PodcastsIcon from '@mui/icons-material/Podcasts';
 import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
+import TimerIcon from '@mui/icons-material/Timer';
 import dayjs from 'dayjs';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -79,6 +80,14 @@ export default function EpisodeListPage() {
                     <Typography variant="subtitle1" fontWeight={600}>
                       {episode.title}
                     </Typography>
+                    {episode.duration != null && (
+                      <Chip
+                        icon={<TimerIcon fontSize="small" />}
+                        label={`${episode.duration} 分钟`}
+                        size="small"
+                        variant="outlined"
+                      />
+                    )}
                   </Stack>
                 }
                 secondary={
