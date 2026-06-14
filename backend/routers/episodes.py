@@ -61,6 +61,7 @@ def list_all_episodes(
 def list_episodes(
     podcast_id: int,
     keyword: str | None = Query(None, min_length=1, max_length=300),
+    sort_by_title: str | None = Query(None, pattern="^(asc|desc)$"),
     db: Session = Depends(get_db),
 ):
     podcast = db.query(models.Podcast).filter(models.Podcast.id == podcast_id).first()
@@ -69,7 +70,12 @@ def list_episodes(
     query = db.query(models.Episode).filter(models.Episode.podcast_id == podcast_id)
     if keyword:
         query = query.filter(models.Episode.title.contains(keyword))
-    query = query.order_by(models.Episode.id)
+    if sort_by_title == "asc":
+        query = query.order_by(models.Episode.title.asc())
+    elif sort_by_title == "desc":
+        query = query.order_by(models.Episode.title.desc())
+    else:
+        query = query.order_by(models.Episode.id)
     return query.all()
 
 

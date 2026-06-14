@@ -13,13 +13,17 @@ import {
   DialogContentText,
   DialogTitle,
   Divider,
+  FormControl,
   IconButton,
   InputAdornment,
+  InputLabel,
   Link,
   List,
   ListItem,
   ListItemText,
+  MenuItem,
   Rating,
+  Select,
   Snackbar,
   Stack,
   TextField,
@@ -52,6 +56,7 @@ import {
   updateListeningNote,
   updatePodcast,
 } from '../api/podcasts';
+import type { EpisodeTitleSort } from '../api/podcasts';
 import type {
   Episode,
   EpisodeFormData,
@@ -91,6 +96,7 @@ export default function PodcastDetailPage() {
   const [markAllDialogOpen, setMarkAllDialogOpen] = useState(false);
   const [searchInput, setSearchInput] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [sortByTitle, setSortByTitle] = useState<EpisodeTitleSort>('none');
 
   const { data: podcast, isLoading, error } = useQuery({
     queryKey: ['podcast', podcastId],
@@ -98,10 +104,12 @@ export default function PodcastDetailPage() {
     enabled: Number.isFinite(podcastId),
   });
 
-  const { data: searchedEpisodes, isFetching: isSearching } = useQuery({
-    queryKey: ['episodes', podcastId, searchKeyword],
-    queryFn: () => fetchEpisodes(podcastId, searchKeyword || undefined),
-    enabled: Number.isFinite(podcastId) && searchKeyword.length > 0,
+  const isFiltering = searchKeyword.length > 0 || sortByTitle !== 'none';
+
+  const { data: filteredEpisodes, isFetching: isFilteringEpisodes } = useQuery({
+    queryKey: ['episodes', podcastId, searchKeyword, sortByTitle],
+    queryFn: () => fetchEpisodes(podcastId, searchKeyword || undefined, sortByTitle),
+    enabled: Number.isFinite(podcastId) && isFiltering,
     placeholderData: undefined,
   });
 
@@ -112,10 +120,9 @@ export default function PodcastDetailPage() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const showSearchResults = searchKeyword.length > 0;
-  const isSearchFirstLoading = showSearchResults && isSearching && !searchedEpisodes;
-  const episodes: Episode[] = showSearchResults
-    ? searchedEpisodes ?? []
+  const isFilterFirstLoading = isFiltering && isFilteringEpisodes && !filteredEpisodes;
+  const episodes: Episode[] = isFiltering
+    ? filteredEpisodes ?? []
     : podcast?.episodes ?? [];
 
   const allEpisodesListened =
@@ -400,14 +407,26 @@ export default function PodcastDetailPage() {
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h5" fontWeight={600}>
           单集列表 (
-          {showSearchResults
-            ? isSearchFirstLoading
-              ? `搜索中... / ${podcast.episodes.length}`
+          {isFiltering
+            ? isFilterFirstLoading
+              ? `加载中... / ${podcast.episodes.length}`
               : `${episodes.length} / ${podcast.episodes.length}`
             : podcast.episodes.length}
           )
         </Typography>
-        <Stack direction="row" spacing={1}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <FormControl size="small" sx={{ minWidth: 140 }}>
+            <InputLabel>标题排序</InputLabel>
+            <Select
+              value={sortByTitle}
+              label="标题排序"
+              onChange={(e) => setSortByTitle(e.target.value as EpisodeTitleSort)}
+            >
+              <MenuItem value="none">默认排序</MenuItem>
+              <MenuItem value="asc">标题 A→Z</MenuItem>
+              <MenuItem value="desc">标题 Z→A</MenuItem>
+            </Select>
+          </FormControl>
           <Button
             variant="outlined"
             startIcon={<CheckCircleIcon />}
@@ -436,7 +455,7 @@ export default function PodcastDetailPage() {
           input: {
             startAdornment: (
               <InputAdornment position="start">
-                {isSearching ? (
+                {isFilteringEpisodes ? (
                   <CircularProgress size={20} />
                 ) : (
                   <SearchIcon fontSize="small" color="action" />
@@ -463,16 +482,18 @@ export default function PodcastDetailPage() {
       />
 
       <Card variant="outlined">
-        {isSearchFirstLoading ? (
+        {isFilterFirstLoading ? (
           <Box p={4} textAlign="center">
             <CircularProgress size={32} sx={{ mb: 2 }} />
-            <Typography color="text.secondary">正在搜索单集...</Typography>
+            <Typography color="text.secondary">正在加载单集...</Typography>
           </Box>
         ) : episodes.length === 0 ? (
           <Box p={4} textAlign="center">
             <Typography color="text.secondary">
-              {showSearchResults
-                ? `没有找到标题包含「${searchKeyword}」的单集。`
+              {isFiltering
+                ? searchKeyword
+                  ? `没有找到标题包含「${searchKeyword}」的单集。`
+                  : '没有匹配的单集。'
                 : '暂无单集，点击上方按钮添加。'}
             </Typography>
           </Box>

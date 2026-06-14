@@ -166,14 +166,21 @@ export async function fetchStats(): Promise<Stats> {
   return data;
 }
 
-/** 获取指定播客的单集列表（支持标题关键词搜索） */
+/** 单集标题排序方式 */
+export type EpisodeTitleSort = 'none' | 'asc' | 'desc';
+
+/** 获取指定播客的单集列表（支持标题关键词搜索和标题排序） */
 export async function fetchEpisodes(
   podcastId: number,
   keyword?: string,
+  sortByTitle: EpisodeTitleSort = 'none',
 ): Promise<Episode[]> {
   const params: Record<string, string> = {};
   if (keyword) {
     params.keyword = keyword;
+  }
+  if (sortByTitle !== 'none') {
+    params.sort_by_title = sortByTitle;
   }
   const { data } = await api.get<Episode[]>(`/podcasts/${podcastId}/episodes`, {
     params,
