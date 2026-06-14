@@ -82,6 +82,9 @@ export interface PlatformStats {
 export interface Stats {
   total_podcasts: number;
   total_episodes: number;
+  listened_episodes: number;
+  unlistened_episodes: number;
+  listen_completion_percent: number;
   platform_stats: PlatformStats[];
 }
 

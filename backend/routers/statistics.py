@@ -14,6 +14,9 @@ def get_stats_endpoint(db: Session = Depends(get_db)):
     return {
         "total_podcasts": stats.total_podcasts,
         "total_episodes": stats.total_episodes,
+        "listened_episodes": stats.listened_episodes,
+        "unlistened_episodes": stats.unlistened_episodes,
+        "listen_completion_percent": stats.listen_completion_percent,
         "platform_stats": [
             {
                 "platform": p.platform,

@@ -4,7 +4,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 import models
-from models import Episode, Podcast
+from models import Episode, Podcast, ListenStatus
 
 
 @dataclass
@@ -18,12 +18,28 @@ class PlatformStatsData:
 class StatsData:
     total_podcasts: int
     total_episodes: int
+    listened_episodes: int
+    unlistened_episodes: int
+    listen_completion_percent: float
     platform_stats: list[PlatformStatsData]
 
 
 def get_stats(db: Session) -> StatsData:
     total_podcasts = db.query(func.count(Podcast.id)).scalar() or 0
     total_episodes = db.query(func.count(Episode.id)).scalar() or 0
+
+    listened_episodes = (
+        db.query(func.count(Episode.id))
+        .filter(Episode.listen_status == ListenStatus.LISTENED)
+        .scalar()
+        or 0
+    )
+    unlistened_episodes = total_episodes - listened_episodes
+    listen_completion_percent = (
+        round((listened_episodes / total_episodes) * 100, 2)
+        if total_episodes > 0
+        else 0.0
+    )
 
     platform_rows = (
         db.query(
@@ -48,6 +64,9 @@ def get_stats(db: Session) -> StatsData:
     return StatsData(
         total_podcasts=total_podcasts,
         total_episodes=total_episodes,
+        listened_episodes=listened_episodes,
+        unlistened_episodes=unlistened_episodes,
+        listen_completion_percent=listen_completion_percent,
         platform_stats=platform_stats,
     )
 

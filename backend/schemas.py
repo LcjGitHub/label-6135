@@ -150,6 +150,9 @@ class StatsResponse(BaseModel):
 
     total_podcasts: int
     total_episodes: int
+    listened_episodes: int
+    unlistened_episodes: int
+    listen_completion_percent: float
     platform_stats: list[PlatformStats]
 
 

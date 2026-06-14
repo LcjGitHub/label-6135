@@ -16,6 +16,7 @@ import {
   Divider,
   FormControl,
   FormControlLabel,
+  LinearProgress,
   Radio,
   RadioGroup,
   Rating,
@@ -25,6 +26,7 @@ import {
 } from '@mui/material';
 import PodcastsIcon from '@mui/icons-material/Podcasts';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import HeadphonesIcon from '@mui/icons-material/Headphones';
 import DownloadIcon from '@mui/icons-material/Download';
 import UploadIcon from '@mui/icons-material/Upload';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -157,7 +159,7 @@ export default function StatisticsPage() {
         </Box>
       </Stack>
 
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} mb={4}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} mb={2}>
         <Card variant="outlined" sx={{ flex: 1 }}>
           <CardContent>
             <Stack direction="row" spacing={2} alignItems="center">
@@ -216,6 +218,54 @@ export default function StatisticsPage() {
           </CardContent>
         </Card>
       </Stack>
+
+      <Card variant="outlined" sx={{ mb: 4 }}>
+        <CardContent>
+          <Stack direction="row" spacing={2} alignItems="center" mb={2}>
+            <Box
+              sx={{
+                width: 56,
+                height: 56,
+                borderRadius: 2,
+                bgcolor: 'success.light',
+                color: 'success.contrastText',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <HeadphonesIcon fontSize="large" />
+            </Box>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                收听完成度
+              </Typography>
+              <Stack direction="row" spacing={2} alignItems="baseline">
+                <Typography variant="h4" fontWeight={700}>
+                  {stats?.listen_completion_percent ?? 0}%
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  已收听 {stats?.listened_episodes ?? 0} 集 / 未收听 {stats?.unlistened_episodes ?? 0} 集
+                </Typography>
+              </Stack>
+            </Box>
+          </Stack>
+          <Box sx={{ width: '100%' }}>
+            <LinearProgress
+              variant="determinate"
+              value={stats?.listen_completion_percent ?? 0}
+              sx={{
+                height: 10,
+                borderRadius: 5,
+                bgcolor: 'grey.200',
+                '& .MuiLinearProgress-bar': {
+                  borderRadius: 5,
+                },
+              }}
+            />
+          </Box>
+        </CardContent>
+      </Card>
 
       <Typography variant="h5" fontWeight={600} gutterBottom mb={2}>
         各平台数据
