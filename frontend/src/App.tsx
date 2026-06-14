@@ -2,11 +2,13 @@ import { Container, AppBar, Toolbar, Typography, Box, Button } from '@mui/materi
 import PodcastsIcon from '@mui/icons-material/Podcasts';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import ListIcon from '@mui/icons-material/List';
+import CategoryIcon from '@mui/icons-material/Category';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import PodcastListPage from './pages/PodcastListPage';
 import PodcastDetailPage from './pages/PodcastDetailPage';
 import StatisticsPage from './pages/StatisticsPage';
 import EpisodeListPage from './pages/EpisodeListPage';
+import ThemesPage from './pages/ThemesPage';
 
 /** 应用根组件：布局 + 路由 */
 export default function App() {
@@ -51,6 +53,18 @@ export default function App() {
           </Button>
           <Button
             component={Link}
+            to="/themes"
+            color="inherit"
+            startIcon={<CategoryIcon />}
+            sx={{
+              fontWeight: location.pathname === '/themes' ? 700 : 400,
+              opacity: location.pathname === '/themes' ? 1 : 0.8,
+            }}
+          >
+            主题浏览
+          </Button>
+          <Button
+            component={Link}
             to="/statistics"
             color="inherit"
             startIcon={<BarChartIcon />}
@@ -69,6 +83,7 @@ export default function App() {
             <Route path="/" element={<PodcastListPage />} />
             <Route path="/podcasts/:id" element={<PodcastDetailPage />} />
             <Route path="/episodes" element={<EpisodeListPage />} />
+            <Route path="/themes" element={<ThemesPage />} />
             <Route path="/statistics" element={<StatisticsPage />} />
           </Routes>
         </Container>

@@ -346,3 +346,62 @@ class TestToggleFavorite:
         response = client.patch("/api/podcasts/9999/favorite")
         assert response.status_code == 404
         assert response.json()["detail"] == "播客不存在"
+
+
+class TestListPodcastsByTheme:
+    def test_list_podcasts_by_theme_empty(self, client):
+        response = client.get("/api/podcasts/themes/grouped")
+        assert response.status_code == 200
+        assert response.json() == []
+
+    def test_list_podcasts_by_theme_single_group(self, client, make_podcast):
+        make_podcast(name="播客A", theme="技术")
+        make_podcast(name="播客B", theme="技术")
+
+        response = client.get("/api/podcasts/themes/grouped")
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 1
+        assert data[0]["theme"] == "技术"
+        assert data[0]["podcast_count"] == 2
+        assert len(data[0]["podcasts"]) == 2
+        assert {p["name"] for p in data[0]["podcasts"]} == {"播客A", "播客B"}
+
+    def test_list_podcasts_by_theme_multiple_groups(self, client, make_podcast):
+        make_podcast(name="技术播客A", theme="技术")
+        make_podcast(name="技术播客B", theme="技术")
+        make_podcast(name="设计播客", theme="设计")
+        make_podcast(name="商业播客A", theme="商业")
+        make_podcast(name="商业播客B", theme="商业")
+        make_podcast(name="商业播客C", theme="商业")
+
+        response = client.get("/api/podcasts/themes/grouped")
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 3
+        assert data[0]["theme"] == "商业"
+        assert data[0]["podcast_count"] == 3
+        assert data[1]["theme"] == "技术"
+        assert data[1]["podcast_count"] == 2
+        assert data[2]["theme"] == "设计"
+        assert data[2]["podcast_count"] == 1
+
+    def test_list_podcasts_by_theme_podcast_fields(self, client, make_podcast):
+        make_podcast(
+            name="完整字段播客",
+            platform="Apple Podcasts",
+            theme="人文",
+            rating=9.5,
+            is_favorited=True,
+        )
+
+        response = client.get("/api/podcasts/themes/grouped")
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 1
+        podcast = data[0]["podcasts"][0]
+        assert podcast["name"] == "完整字段播客"
+        assert podcast["platform"] == "Apple Podcasts"
+        assert podcast["rating"] == 9.5
+        assert podcast["is_favorited"] is True
+        assert "id" in podcast

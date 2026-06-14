@@ -9,6 +9,7 @@ import type {
   PodcastDetail,
   PodcastFormData,
   Stats,
+  ThemeGroup,
 } from '../types';
 
 const api = axios.create({
@@ -166,5 +167,11 @@ export async function fetchEpisodes(
 /** 获取全部单集列表（跨播客） */
 export async function fetchAllEpisodes(): Promise<EpisodeWithPodcast[]> {
   const { data } = await api.get<EpisodeWithPodcast[]>('/episodes');
+  return data;
+}
+
+/** 按主题分组获取播客列表 */
+export async function fetchPodcastsByTheme(): Promise<ThemeGroup[]> {
+  const { data } = await api.get<ThemeGroup[]>('/podcasts/themes/grouped');
   return data;
 }

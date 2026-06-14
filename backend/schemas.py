@@ -107,6 +107,26 @@ class PlatformStats(BaseModel):
     avg_rating: float
 
 
+class PodcastThemeItem(BaseModel):
+    """主题分组中的播客条目。"""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    platform: str
+    rating: float
+    is_favorited: bool
+
+
+class ThemeGroup(BaseModel):
+    """主题分组响应。"""
+
+    theme: str
+    podcast_count: int
+    podcasts: list[PodcastThemeItem]
+
+
 class StatsResponse(BaseModel):
     """统计概览响应。"""
 

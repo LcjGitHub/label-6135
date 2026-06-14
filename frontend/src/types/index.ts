@@ -72,3 +72,19 @@ export interface Stats {
   total_episodes: number;
   platform_stats: PlatformStats[];
 }
+
+/** 主题分组中的播客条目 */
+export interface PodcastThemeItem {
+  id: number;
+  name: string;
+  platform: string;
+  rating: number;
+  is_favorited: boolean;
+}
+
+/** 主题分组数据 */
+export interface ThemeGroup {
+  theme: string;
+  podcast_count: number;
+  podcasts: PodcastThemeItem[];
+}

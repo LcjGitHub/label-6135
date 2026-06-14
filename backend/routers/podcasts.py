@@ -3,7 +3,13 @@ from sqlalchemy.orm import Session
 
 import models
 from database import get_db
-from schemas import PodcastCreate, PodcastDetailResponse, PodcastResponse, PodcastUpdate
+from schemas import (
+    PodcastCreate,
+    PodcastDetailResponse,
+    PodcastResponse,
+    PodcastUpdate,
+    ThemeGroup,
+)
 
 router = APIRouter(prefix="/api/podcasts", tags=["播客"])
 
@@ -30,6 +36,27 @@ def list_podcasts(
     else:
         query = query.order_by(models.Podcast.id)
     return query.all()
+
+
+@router.get("/themes/grouped", response_model=list[ThemeGroup])
+def list_podcasts_by_theme(db: Session = Depends(get_db)):
+    podcasts = db.query(models.Podcast).order_by(models.Podcast.theme, models.Podcast.id).all()
+    groups: dict[str, list[models.Podcast]] = {}
+    for podcast in podcasts:
+        if podcast.theme not in groups:
+            groups[podcast.theme] = []
+        groups[podcast.theme].append(podcast)
+    result = []
+    for theme, theme_podcasts in groups.items():
+        result.append(
+            ThemeGroup(
+                theme=theme,
+                podcast_count=len(theme_podcasts),
+                podcasts=theme_podcasts,
+            )
+        )
+    result.sort(key=lambda g: (-g.podcast_count, g.theme))
+    return result
 
 
 @router.post("", response_model=PodcastResponse, status_code=201)
