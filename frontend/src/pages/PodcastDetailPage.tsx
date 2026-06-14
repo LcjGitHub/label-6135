@@ -94,6 +94,7 @@ export default function PodcastDetailPage() {
     message: string;
   }>({ open: false, message: '' });
   const [markAllDialogOpen, setMarkAllDialogOpen] = useState(false);
+  const [markAllUnlistenedDialogOpen, setMarkAllUnlistenedDialogOpen] = useState(false);
   const [searchInput, setSearchInput] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
   const [sortByTitle, setSortByTitle] = useState<EpisodeTitleSort>('none');
@@ -128,6 +129,11 @@ export default function PodcastDetailPage() {
   const allEpisodesListened =
     podcast && podcast.episodes.length > 0
       ? podcast.episodes.every((ep) => ep.listen_status === '已收听')
+      : true;
+
+  const allEpisodesUnlistened =
+    podcast && podcast.episodes.length > 0
+      ? podcast.episodes.every((ep) => ep.listen_status === '未收听')
       : true;
 
   const updatePodcastMutation = useMutation({
@@ -206,6 +212,29 @@ export default function PodcastDetailPage() {
         open: true,
         message:
           error instanceof Error ? error.message : '批量标记已收听失败，请重试',
+      });
+    },
+  });
+
+  const markAllUnlistenedMutation = useMutation({
+    mutationFn: () => updateAllEpisodesListenStatus(podcastId, '未收听'),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['podcast', podcastId] });
+      queryClient.invalidateQueries({ queryKey: ['all-episodes'] });
+      queryClient.invalidateQueries({ queryKey: ['episodes', podcastId] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+      setMarkAllUnlistenedDialogOpen(false);
+      setSuccessSnackbar({
+        open: true,
+        message: `已成功将 ${data.updated_count} 个单集标记为未收听`,
+      });
+    },
+    onError: (error) => {
+      setMarkAllUnlistenedDialogOpen(false);
+      setErrorSnackbar({
+        open: true,
+        message:
+          error instanceof Error ? error.message : '批量标记未收听失败，请重试',
       });
     },
   });
@@ -438,6 +467,18 @@ export default function PodcastDetailPage() {
             }
           >
             {markAllListenedMutation.isPending ? '标记中...' : '全部标记已收听'}
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<RadioButtonUncheckedIcon />}
+            onClick={() => setMarkAllUnlistenedDialogOpen(true)}
+            disabled={
+              podcast.episodes.length === 0 ||
+              allEpisodesUnlistened ||
+              markAllUnlistenedMutation.isPending
+            }
+          >
+            {markAllUnlistenedMutation.isPending ? '标记中...' : '全部标记未收听'}
           </Button>
           <Button variant="contained" startIcon={<AddIcon />} onClick={openCreateEpisode}>
             新增单集
@@ -766,6 +807,35 @@ export default function PodcastDetailPage() {
             disabled={markAllListenedMutation.isPending}
           >
             {markAllListenedMutation.isPending ? '标记中...' : '确认标记'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={markAllUnlistenedDialogOpen}
+        onClose={() => !markAllUnlistenedMutation.isPending && setMarkAllUnlistenedDialogOpen(false)}
+      >
+        <DialogTitle>确认全部标记未收听</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            确定要将该播客下全部 {podcast?.episodes.length ?? 0} 个单集标记为未收听吗？
+            仍将更新当前已标记的单集。
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setMarkAllUnlistenedDialogOpen(false)}
+            disabled={markAllUnlistenedMutation.isPending}
+          >
+            取消
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => markAllUnlistenedMutation.mutate()}
+            disabled={markAllUnlistenedMutation.isPending}
+          >
+            {markAllUnlistenedMutation.isPending ? '标记中...' : '确认标记'}
           </Button>
         </DialogActions>
       </Dialog>
