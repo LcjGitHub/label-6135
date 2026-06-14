@@ -209,6 +209,13 @@ export default function PodcastListPage() {
           </Typography>
           <Typography variant="body2" color="text.secondary">
             {dayjs().format('YYYY年M月D日')} · 共 {podcasts?.length ?? 0} 档节目
+            {podcasts && podcasts.length > 0 && (
+              <>
+                {' · '}
+                单集合计{' '}
+                {podcasts.reduce((sum, p) => sum + (p.episode_count ?? 0), 0)} 条
+              </>
+            )}
           </Typography>
         </Box>
         <Stack direction="row" spacing={2} alignItems="center">
@@ -385,6 +392,12 @@ export default function PodcastListPage() {
                     <Stack direction="row" spacing={1} mb={1.5} flexWrap="wrap" useFlexGap>
                       <Chip label={podcast.platform} size="small" color="primary" variant="outlined" />
                       <Chip label={podcast.theme} size="small" />
+                      <Chip
+                        label={`${podcast.episode_count ?? 0} 集`}
+                        size="small"
+                        color="secondary"
+                        variant="outlined"
+                      />
                     </Stack>
                     <Stack direction="row" alignItems="center" spacing={1} mb={1}>
                       <Rating value={podcast.rating / 2} precision={0.5} readOnly size="small" />

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 import models
@@ -23,7 +24,25 @@ def list_podcasts(
     sort_by_rating: str | None = Query(None, pattern="^(asc|desc)$"),
     db: Session = Depends(get_db),
 ):
-    query = db.query(models.Podcast)
+    episode_count_subq = (
+        select(
+            models.Episode.podcast_id,
+            func.count(models.Episode.id).label("episode_count"),
+        )
+        .group_by(models.Episode.podcast_id)
+        .subquery()
+    )
+
+    query = (
+        db.query(
+            models.Podcast,
+            func.coalesce(episode_count_subq.c.episode_count, 0).label("episode_count"),
+        )
+        .outerjoin(
+            episode_count_subq,
+            episode_count_subq.c.podcast_id == models.Podcast.id,
+        )
+    )
     if favorited_only:
         query = query.filter(models.Podcast.is_favorited == True)
     if platform:
@@ -38,7 +57,12 @@ def list_podcasts(
         query = query.order_by(models.Podcast.rating.asc(), models.Podcast.id)
     else:
         query = query.order_by(models.Podcast.id)
-    return query.all()
+
+    results = []
+    for podcast, episode_count in query.all():
+        podcast.episode_count = episode_count
+        results.append(podcast)
+    return results
 
 
 @router.get("/themes/grouped", response_model=list[ThemeGroup])

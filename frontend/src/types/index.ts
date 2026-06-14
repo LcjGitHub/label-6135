@@ -17,6 +17,7 @@ export interface Podcast {
   notes: string | null;
   subscribe_url: string | null;
   is_favorited: boolean;
+  episode_count: number;
 }
 
 /** 单集实体 */
