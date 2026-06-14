@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 import models
@@ -11,6 +12,7 @@ from schemas import (
     EpisodeResponse,
     EpisodeUpdate,
     EpisodeWithPodcastResponse,
+    RandomEpisodeRecommendationResponse,
 )
 
 router = APIRouter(tags=["单集"])
@@ -157,4 +159,33 @@ def update_all_episodes_listen_status(
     return {
         "updated_count": result,
         "podcast_id": podcast_id,
+    }
+
+
+@router.get(
+    "/api/episodes/random-unlistened",
+    response_model=RandomEpisodeRecommendationResponse,
+)
+def get_random_unlistened_episode(db: Session = Depends(get_db)):
+    row = (
+        db.query(
+            models.Episode.id,
+            models.Episode.podcast_id,
+            models.Episode.title,
+            models.Episode.recommendation,
+            models.Podcast.name.label("podcast_name"),
+        )
+        .join(models.Podcast, models.Episode.podcast_id == models.Podcast.id)
+        .filter(models.Episode.listen_status == ListenStatus.UNLISTENED)
+        .order_by(func.random())
+        .first()
+    )
+    if not row:
+        raise HTTPException(status_code=404, detail="暂无可推荐的未收听单集")
+    return {
+        "id": row.id,
+        "podcast_id": row.podcast_id,
+        "title": row.title,
+        "recommendation": row.recommendation,
+        "podcast_name": row.podcast_name,
     }

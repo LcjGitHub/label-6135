@@ -12,6 +12,7 @@ import type {
   Podcast,
   PodcastDetail,
   PodcastFormData,
+  RandomEpisodeRecommendation,
   Stats,
   ThemeGroup,
 } from '../types';
@@ -173,6 +174,12 @@ export async function fetchEpisodes(
 /** 获取全部单集列表（跨播客） */
 export async function fetchAllEpisodes(): Promise<EpisodeWithPodcast[]> {
   const { data } = await api.get<EpisodeWithPodcast[]>('/episodes');
+  return data;
+}
+
+/** 随机推荐一条未收听单集 */
+export async function fetchRandomUnlistenedEpisode(): Promise<RandomEpisodeRecommendation> {
+  const { data } = await api.get<RandomEpisodeRecommendation>('/episodes/random-unlistened');
   return data;
 }
 

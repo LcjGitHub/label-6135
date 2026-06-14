@@ -40,6 +40,15 @@ export interface EpisodeWithPodcast {
   listen_status: ListenStatus;
 }
 
+/** 随机推荐未收听单集 */
+export interface RandomEpisodeRecommendation {
+  id: number;
+  podcast_id: number;
+  title: string;
+  recommendation: string | null;
+  podcast_name: string;
+}
+
 /** 播客详情（含单集） */
 export interface PodcastDetail extends Podcast {
   episodes: Episode[];

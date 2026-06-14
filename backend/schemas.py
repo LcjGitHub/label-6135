@@ -64,6 +64,18 @@ class EpisodeWithPodcastResponse(EpisodeBase):
     listen_status: str = "未收听"
 
 
+class RandomEpisodeRecommendationResponse(BaseModel):
+    """随机推荐未收听单集响应。"""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    id: int
+    podcast_id: int
+    title: str
+    recommendation: str | None = None
+    podcast_name: str
+
+
 class PodcastBase(BaseModel):
     """播客公共字段。"""
 
