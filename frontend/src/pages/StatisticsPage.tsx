@@ -29,10 +29,12 @@ import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import HeadphonesIcon from '@mui/icons-material/Headphones';
 import DownloadIcon from '@mui/icons-material/Download';
 import UploadIcon from '@mui/icons-material/Upload';
+import CategoryIcon from '@mui/icons-material/Category';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { exportAllData, fetchStats, importData } from '../api/podcasts';
-import type { ImportMode, PlatformStats } from '../types';
+import type { ImportMode, PlatformStats, ThemeStats } from '../types';
 
 /** 统计概览页 */
 export default function StatisticsPage() {
@@ -94,6 +96,10 @@ export default function StatisticsPage() {
 
   function handlePlatformClick(platform: string) {
     navigate(`/?platform=${encodeURIComponent(platform)}`);
+  }
+
+  function handleThemeClick(theme: string) {
+    navigate(`/?theme=${encodeURIComponent(theme)}`);
   }
 
   function handleExportClick() {
@@ -322,6 +328,96 @@ export default function StatisticsPage() {
           ))}
         </Box>
       )}
+
+      <Typography variant="h5" fontWeight={600} gutterBottom mb={2} mt={4}>
+        各主题分布
+      </Typography>
+
+      <Card variant="outlined">
+        <CardContent>
+          <Stack direction="row" spacing={2} alignItems="center" mb={2}>
+            <Box
+              sx={{
+                width: 48,
+                height: 48,
+                borderRadius: 2,
+                bgcolor: 'info.light',
+                color: 'info.contrastText',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <CategoryIcon />
+            </Box>
+            <Box>
+              <Typography variant="body2" color="text.secondary">
+                共 {stats?.theme_stats?.length ?? 0} 个主题分类
+              </Typography>
+            </Box>
+          </Stack>
+          {stats?.theme_stats?.length === 0 ? (
+            <Box sx={{ py: 4, textAlign: 'center' }}>
+              <Typography color="text.secondary">
+                暂无主题数据，先去播客列表添加一些节目吧。
+              </Typography>
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                display: 'grid',
+                gap: 1,
+                gridTemplateColumns: {
+                  xs: '1fr',
+                  sm: 'repeat(2, 1fr)',
+                  md: 'repeat(3, 1fr)',
+                },
+              }}
+            >
+              {stats?.theme_stats?.map((item: ThemeStats) => (
+                <Card
+                  key={item.theme}
+                  variant="outlined"
+                  sx={{
+                    '&:hover': {
+                      borderColor: 'primary.main',
+                      boxShadow: 1,
+                    },
+                    transition: 'all 0.2s ease-in-out',
+                  }}
+                >
+                  <CardActionArea
+                    onClick={() => handleThemeClick(item.theme)}
+                    sx={{ py: 1.5, px: 2 }}
+                  >
+                    <Stack
+                      direction="row"
+                      justifyContent="space-between"
+                      alignItems="center"
+                    >
+                      <Stack direction="row" spacing={1.5} alignItems="center">
+                        <Chip
+                          label={item.theme}
+                          color="info"
+                          variant="outlined"
+                          size="small"
+                        />
+                        <Typography variant="body1" fontWeight={600}>
+                          {item.podcast_count} 档
+                        </Typography>
+                      </Stack>
+                      <ChevronRightIcon
+                        fontSize="small"
+                        sx={{ color: 'text.secondary' }}
+                      />
+                    </Stack>
+                  </CardActionArea>
+                </Card>
+              ))}
+            </Box>
+          )}
+        </CardContent>
+      </Card>
 
       <Divider sx={{ my: 6 }} />
 

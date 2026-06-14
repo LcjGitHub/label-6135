@@ -125,6 +125,13 @@ class PlatformStats(BaseModel):
     avg_rating: float
 
 
+class ThemeStats(BaseModel):
+    """主题统计数据。"""
+
+    theme: str
+    podcast_count: int
+
+
 class PodcastThemeItem(BaseModel):
     """主题分组中的播客条目。"""
 
@@ -154,6 +161,7 @@ class StatsResponse(BaseModel):
     unlistened_episodes: int
     listen_completion_percent: float
     platform_stats: list[PlatformStats]
+    theme_stats: list[ThemeStats]
 
 
 class ListeningNoteCreate(BaseModel):

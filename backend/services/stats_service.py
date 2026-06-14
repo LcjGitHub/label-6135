@@ -15,6 +15,12 @@ class PlatformStatsData:
 
 
 @dataclass
+class ThemeStatsData:
+    theme: str
+    podcast_count: int
+
+
+@dataclass
 class StatsData:
     total_podcasts: int
     total_episodes: int
@@ -22,6 +28,7 @@ class StatsData:
     unlistened_episodes: int
     listen_completion_percent: float
     platform_stats: list[PlatformStatsData]
+    theme_stats: list[ThemeStatsData]
 
 
 def get_stats(db: Session) -> StatsData:
@@ -61,6 +68,24 @@ def get_stats(db: Session) -> StatsData:
         for row in platform_rows
     ]
 
+    theme_rows = (
+        db.query(
+            Podcast.theme,
+            func.count(Podcast.id).label("podcast_count"),
+        )
+        .group_by(Podcast.theme)
+        .order_by(Podcast.theme)
+        .all()
+    )
+
+    theme_stats = [
+        ThemeStatsData(
+            theme=row.theme,
+            podcast_count=row.podcast_count,
+        )
+        for row in theme_rows
+    ]
+
     return StatsData(
         total_podcasts=total_podcasts,
         total_episodes=total_episodes,
@@ -68,6 +93,7 @@ def get_stats(db: Session) -> StatsData:
         unlistened_episodes=unlistened_episodes,
         listen_completion_percent=listen_completion_percent,
         platform_stats=platform_stats,
+        theme_stats=theme_stats,
     )
 
 

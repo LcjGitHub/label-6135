@@ -78,6 +78,12 @@ export interface PlatformStats {
   avg_rating: number;
 }
 
+/** 主题统计数据 */
+export interface ThemeStats {
+  theme: string;
+  podcast_count: number;
+}
+
 /** 统计概览数据 */
 export interface Stats {
   total_podcasts: number;
@@ -86,6 +92,7 @@ export interface Stats {
   unlistened_episodes: number;
   listen_completion_percent: number;
   platform_stats: PlatformStats[];
+  theme_stats: ThemeStats[];
 }
 
 /** 主题分组中的播客条目 */

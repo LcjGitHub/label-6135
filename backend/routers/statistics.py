@@ -25,6 +25,13 @@ def get_stats_endpoint(db: Session = Depends(get_db)):
             }
             for p in stats.platform_stats
         ],
+        "theme_stats": [
+            {
+                "theme": t.theme,
+                "podcast_count": t.podcast_count,
+            }
+            for t in stats.theme_stats
+        ],
     }
 
 
