@@ -215,6 +215,82 @@ class TestListEpisodesByPodcast:
         assert response.status_code == 404
         assert response.json()["detail"] == "播客不存在"
 
+    def test_list_episodes_sort_by_duration_asc(self, client, make_podcast, make_episode):
+        podcast = make_podcast()
+        make_episode(podcast_id=podcast.id, title="长单集", duration=60)
+        make_episode(podcast_id=podcast.id, title="短单集", duration=10)
+        make_episode(podcast_id=podcast.id, title="中等单集", duration=30)
+
+        response = client.get(
+            f"/api/podcasts/{podcast.id}/episodes",
+            params={"sort_by_duration": "asc"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 3
+        assert data[0]["title"] == "短单集"
+        assert data[1]["title"] == "中等单集"
+        assert data[2]["title"] == "长单集"
+
+    def test_list_episodes_sort_by_duration_desc(self, client, make_podcast, make_episode):
+        podcast = make_podcast()
+        make_episode(podcast_id=podcast.id, title="长单集", duration=60)
+        make_episode(podcast_id=podcast.id, title="短单集", duration=10)
+        make_episode(podcast_id=podcast.id, title="中等单集", duration=30)
+
+        response = client.get(
+            f"/api/podcasts/{podcast.id}/episodes",
+            params={"sort_by_duration": "desc"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 3
+        assert data[0]["title"] == "长单集"
+        assert data[1]["title"] == "中等单集"
+        assert data[2]["title"] == "短单集"
+
+    def test_list_episodes_sort_by_duration_with_null(self, client, make_podcast, make_episode):
+        podcast = make_podcast()
+        make_episode(podcast_id=podcast.id, title="无时长", duration=None)
+        make_episode(podcast_id=podcast.id, title="有时长", duration=30)
+
+        response = client.get(
+            f"/api/podcasts/{podcast.id}/episodes",
+            params={"sort_by_duration": "asc"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 2
+
+    def test_list_episodes_sort_by_duration_and_title_combined(
+        self, client, make_podcast, make_episode
+    ):
+        podcast = make_podcast()
+        make_episode(podcast_id=podcast.id, title="B集", duration=30)
+        make_episode(podcast_id=podcast.id, title="A集", duration=30)
+        make_episode(podcast_id=podcast.id, title="C集", duration=10)
+
+        response = client.get(
+            f"/api/podcasts/{podcast.id}/episodes",
+            params={"sort_by_duration": "asc", "sort_by_title": "asc"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 3
+        assert data[0]["title"] == "C集"
+        assert data[1]["title"] == "A集"
+        assert data[2]["title"] == "B集"
+
+    def test_list_episodes_sort_by_duration_invalid(self, client, make_podcast, make_episode):
+        podcast = make_podcast()
+        make_episode(podcast_id=podcast.id, title="测试")
+
+        response = client.get(
+            f"/api/podcasts/{podcast.id}/episodes",
+            params={"sort_by_duration": "invalid"},
+        )
+        assert response.status_code == 422
+
 
 class TestUpdateEpisode:
     def test_update_episode_title(self, client, db_session, make_podcast, make_episode):

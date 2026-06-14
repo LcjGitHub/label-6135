@@ -66,6 +66,7 @@ def list_episodes(
     podcast_id: int,
     keyword: str | None = Query(None, min_length=1, max_length=300),
     sort_by_title: str | None = Query(None, pattern="^(asc|desc)$"),
+    sort_by_duration: str | None = Query(None, pattern="^(asc|desc)$"),
     db: Session = Depends(get_db),
 ):
     podcast = db.query(models.Podcast).filter(models.Podcast.id == podcast_id).first()
@@ -74,12 +75,18 @@ def list_episodes(
     query = db.query(models.Episode).filter(models.Episode.podcast_id == podcast_id)
     if keyword:
         query = query.filter(models.Episode.title.contains(keyword))
+    order_clauses = []
+    if sort_by_duration == "asc":
+        order_clauses.append(models.Episode.duration.asc())
+    elif sort_by_duration == "desc":
+        order_clauses.append(models.Episode.duration.desc())
     if sort_by_title == "asc":
-        query = query.order_by(models.Episode.title.asc())
+        order_clauses.append(models.Episode.title.asc())
     elif sort_by_title == "desc":
-        query = query.order_by(models.Episode.title.desc())
-    else:
-        query = query.order_by(models.Episode.id)
+        order_clauses.append(models.Episode.title.desc())
+    if not order_clauses:
+        order_clauses.append(models.Episode.id)
+    query = query.order_by(*order_clauses)
     return query.all()
 
 

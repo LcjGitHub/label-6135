@@ -56,7 +56,7 @@ import {
   updateListeningNote,
   updatePodcast,
 } from '../api/podcasts';
-import type { EpisodeTitleSort } from '../api/podcasts';
+import type { EpisodeTitleSort, EpisodeDurationSort } from '../api/podcasts';
 import type {
   Episode,
   EpisodeFormData,
@@ -97,7 +97,10 @@ export default function PodcastDetailPage() {
   const [markAllUnlistenedDialogOpen, setMarkAllUnlistenedDialogOpen] = useState(false);
   const [searchInput, setSearchInput] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [noteSearchInput, setNoteSearchInput] = useState('');
+  const [noteSearchKeyword, setNoteSearchKeyword] = useState('');
   const [sortByTitle, setSortByTitle] = useState<EpisodeTitleSort>('none');
+  const [sortByDuration, setSortByDuration] = useState<EpisodeDurationSort>('none');
 
   const { data: podcast, isLoading, error } = useQuery({
     queryKey: ['podcast', podcastId],
@@ -105,11 +108,11 @@ export default function PodcastDetailPage() {
     enabled: Number.isFinite(podcastId),
   });
 
-  const isFiltering = searchKeyword.length > 0 || sortByTitle !== 'none';
+  const isFiltering = searchKeyword.length > 0 || sortByTitle !== 'none' || sortByDuration !== 'none';
 
   const { data: filteredEpisodes, isFetching: isFilteringEpisodes } = useQuery({
-    queryKey: ['episodes', podcastId, searchKeyword, sortByTitle],
-    queryFn: () => fetchEpisodes(podcastId, searchKeyword || undefined, sortByTitle),
+    queryKey: ['episodes', podcastId, searchKeyword, sortByTitle, sortByDuration],
+    queryFn: () => fetchEpisodes(podcastId, searchKeyword || undefined, sortByTitle, sortByDuration),
     enabled: Number.isFinite(podcastId) && isFiltering,
     placeholderData: undefined,
   });
@@ -120,6 +123,13 @@ export default function PodcastDetailPage() {
     }, 300);
     return () => clearTimeout(timer);
   }, [searchInput]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setNoteSearchKeyword(noteSearchInput.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [noteSearchInput]);
 
   const isFilterFirstLoading = isFiltering && isFilteringEpisodes && !filteredEpisodes;
   const episodes: Episode[] = isFiltering
@@ -239,11 +249,25 @@ export default function PodcastDetailPage() {
     },
   });
 
-  const { data: listeningNotes, isFetching: isNotesLoading } = useQuery({
+  const isNotesFiltering = noteSearchKeyword.length > 0;
+
+  const { data: allListeningNotes, isFetching: isAllNotesLoading } = useQuery({
     queryKey: ['listening-notes', podcastId],
     queryFn: () => fetchListeningNotes(podcastId),
     enabled: Number.isFinite(podcastId),
   });
+
+  const { data: listeningNotes, isFetching: isFilteringNotes } = useQuery({
+    queryKey: ['listening-notes', podcastId, noteSearchKeyword],
+    queryFn: () => fetchListeningNotes(podcastId, noteSearchKeyword || undefined),
+    enabled: Number.isFinite(podcastId) && isNotesFiltering,
+  });
+
+  const isNotesLoading = isNotesFiltering ? isFilteringNotes : isAllNotesLoading;
+  const displayNotes: ListeningNote[] = isNotesFiltering
+    ? listeningNotes ?? []
+    : allListeningNotes ?? [];
+  const totalNotesCount = allListeningNotes?.length ?? 0;
 
   const saveNoteMutation = useMutation({
     mutationFn: (payload: ListeningNoteFormData) =>
@@ -456,6 +480,18 @@ export default function PodcastDetailPage() {
               <MenuItem value="desc">标题 Z→A</MenuItem>
             </Select>
           </FormControl>
+          <FormControl size="small" sx={{ minWidth: 140 }}>
+            <InputLabel>时长排序</InputLabel>
+            <Select
+              value={sortByDuration}
+              label="时长排序"
+              onChange={(e) => setSortByDuration(e.target.value as EpisodeDurationSort)}
+            >
+              <MenuItem value="none">默认排序</MenuItem>
+              <MenuItem value="asc">时长 短→长</MenuItem>
+              <MenuItem value="desc">时长 长→短</MenuItem>
+            </Select>
+          </FormControl>
           <Button
             variant="outlined"
             startIcon={<CheckCircleIcon />}
@@ -604,28 +640,73 @@ export default function PodcastDetailPage() {
 
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: 5, mb: 2 }}>
         <Typography variant="h5" fontWeight={600}>
-          听感笔记 ({isNotesLoading ? '加载中...' : listeningNotes?.length ?? 0})
+          听感笔记 (
+          {isNotesLoading && !allListeningNotes
+            ? '加载中...'
+            : isNotesFiltering
+              ? `${displayNotes.length} / ${totalNotesCount}`
+              : totalNotesCount}
+          )
         </Typography>
-        <Button variant="contained" startIcon={<StickyNote2Icon />} onClick={openCreateNote}>
-          新增笔记
-        </Button>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <TextField
+            size="small"
+            placeholder="搜索笔记正文关键词..."
+            value={noteSearchInput}
+            onChange={(e) => setNoteSearchInput(e.target.value)}
+            sx={{ width: 260 }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    {isNotesFiltering && isFilteringNotes ? (
+                      <CircularProgress size={20} />
+                    ) : (
+                      <SearchIcon fontSize="small" color="action" />
+                    )}
+                  </InputAdornment>
+                ),
+                endAdornment: noteSearchInput ? (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      edge="end"
+                      onClick={() => {
+                        setNoteSearchInput('');
+                        setNoteSearchKeyword('');
+                      }}
+                      aria-label="清除搜索"
+                    >
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ) : null,
+              },
+            }}
+          />
+          <Button variant="contained" startIcon={<StickyNote2Icon />} onClick={openCreateNote}>
+            新增笔记
+          </Button>
+        </Stack>
       </Stack>
 
       <Card variant="outlined">
-        {isNotesLoading && !listeningNotes ? (
+        {isNotesLoading && !allListeningNotes ? (
           <Box p={4} textAlign="center">
             <CircularProgress size={32} sx={{ mb: 2 }} />
             <Typography color="text.secondary">正在加载听感笔记...</Typography>
           </Box>
-        ) : listeningNotes?.length === 0 ? (
+        ) : displayNotes.length === 0 ? (
           <Box p={4} textAlign="center">
             <Typography color="text.secondary">
-              暂无听感笔记，点击上方按钮添加你的收听感受。
+              {isNotesFiltering
+                ? `没有找到正文包含「${noteSearchKeyword}」的听感笔记。`
+                : '暂无听感笔记，点击上方按钮添加你的收听感受。'}
             </Typography>
           </Box>
         ) : (
           <List disablePadding>
-            {(listeningNotes ?? []).map((note, index) => (
+            {displayNotes.map((note, index) => (
               <Box key={note.id}>
                 {index > 0 && <Divider component="li" />}
                 <ListItem

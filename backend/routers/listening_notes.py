@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 import models
@@ -18,6 +18,7 @@ router = APIRouter(tags=["听感笔记"])
 )
 def list_listening_notes(
     podcast_id: int,
+    keyword: str | None = Query(None, description="正文关键词模糊匹配"),
     db: Session = Depends(get_db),
 ):
     podcast = db.query(models.Podcast).filter(models.Podcast.id == podcast_id).first()
@@ -26,8 +27,10 @@ def list_listening_notes(
     query = (
         db.query(models.ListeningNote)
         .filter(models.ListeningNote.podcast_id == podcast_id)
-        .order_by(models.ListeningNote.id.desc())
     )
+    if keyword:
+        query = query.filter(models.ListeningNote.content.ilike(f"%{keyword}%"))
+    query = query.order_by(models.ListeningNote.id.desc())
     return query.all()
 
 

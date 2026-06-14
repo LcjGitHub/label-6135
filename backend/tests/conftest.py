@@ -121,12 +121,14 @@ def make_episode(db_session):
         title: str = "测试单集",
         recommendation: str | None = None,
         listen_status: ListenStatus = ListenStatus.UNLISTENED,
+        duration: int | None = None,
     ) -> Episode:
         episode = Episode(
             podcast_id=podcast_id,
             title=title,
             recommendation=recommendation,
             listen_status=listen_status,
+            duration=duration,
         )
         db_session.add(episode)
         db_session.commit()

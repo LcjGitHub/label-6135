@@ -169,11 +169,15 @@ export async function fetchStats(): Promise<Stats> {
 /** 单集标题排序方式 */
 export type EpisodeTitleSort = 'none' | 'asc' | 'desc';
 
-/** 获取指定播客的单集列表（支持标题关键词搜索和标题排序） */
+/** 单集时长排序方式 */
+export type EpisodeDurationSort = 'none' | 'asc' | 'desc';
+
+/** 获取指定播客的单集列表（支持标题关键词搜索、标题排序和时长排序） */
 export async function fetchEpisodes(
   podcastId: number,
   keyword?: string,
   sortByTitle: EpisodeTitleSort = 'none',
+  sortByDuration: EpisodeDurationSort = 'none',
 ): Promise<Episode[]> {
   const params: Record<string, string> = {};
   if (keyword) {
@@ -181,6 +185,9 @@ export async function fetchEpisodes(
   }
   if (sortByTitle !== 'none') {
     params.sort_by_title = sortByTitle;
+  }
+  if (sortByDuration !== 'none') {
+    params.sort_by_duration = sortByDuration;
   }
   const { data } = await api.get<Episode[]>(`/podcasts/${podcastId}/episodes`, {
     params,
@@ -216,12 +223,18 @@ export async function fetchPodcastsByTheme(): Promise<ThemeGroup[]> {
   return data;
 }
 
-/** 获取指定播客的听感笔记列表 */
+/** 获取指定播客的听感笔记列表（支持正文关键词搜索） */
 export async function fetchListeningNotes(
   podcastId: number,
+  keyword?: string,
 ): Promise<ListeningNote[]> {
+  const params: Record<string, string> = {};
+  if (keyword) {
+    params.keyword = keyword;
+  }
   const { data } = await api.get<ListeningNote[]>(
     `/podcasts/${podcastId}/listening-notes`,
+    { params },
   );
   return data;
 }
