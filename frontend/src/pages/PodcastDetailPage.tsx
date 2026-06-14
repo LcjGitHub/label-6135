@@ -34,22 +34,35 @@ import EditIcon from '@mui/icons-material/Edit';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import SearchIcon from '@mui/icons-material/Search';
 import TimerIcon from '@mui/icons-material/Timer';
+import StickyNote2Icon from '@mui/icons-material/StickyNote2';
 import dayjs from 'dayjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import {
   createEpisode,
+  createListeningNote,
   deleteEpisode,
+  deleteListeningNote,
   fetchEpisodes,
+  fetchListeningNotes,
   fetchPodcast,
   updateAllEpisodesListenStatus,
   updateEpisode,
   updateListenStatus,
+  updateListeningNote,
   updatePodcast,
 } from '../api/podcasts';
-import type { Episode, EpisodeFormData, ListenStatus, PodcastFormData } from '../types';
+import type {
+  Episode,
+  EpisodeFormData,
+  ListenStatus,
+  ListeningNote,
+  ListeningNoteFormData,
+  PodcastFormData,
+} from '../types';
 
 const EMPTY_EPISODE: EpisodeFormData = { title: '', recommendation: '', duration: '' };
+const EMPTY_NOTE: ListeningNoteFormData = { content: '' };
 
 /** 播客详情页（含单集列表） */
 export default function PodcastDetailPage() {
@@ -60,9 +73,12 @@ export default function PodcastDetailPage() {
 
   const [podcastDialogOpen, setPodcastDialogOpen] = useState(false);
   const [episodeDialogOpen, setEpisodeDialogOpen] = useState(false);
+  const [noteDialogOpen, setNoteDialogOpen] = useState(false);
   const [editingEpisode, setEditingEpisode] = useState<Episode | null>(null);
+  const [editingNote, setEditingNote] = useState<ListeningNote | null>(null);
   const [podcastForm, setPodcastForm] = useState<PodcastFormData | null>(null);
   const [episodeForm, setEpisodeForm] = useState<EpisodeFormData>(EMPTY_EPISODE);
+  const [noteForm, setNoteForm] = useState<ListeningNoteFormData>(EMPTY_NOTE);
   const [updatingEpisodeId, setUpdatingEpisodeId] = useState<number | null>(null);
   const [errorSnackbar, setErrorSnackbar] = useState<{
     open: boolean;
@@ -187,6 +203,30 @@ export default function PodcastDetailPage() {
     },
   });
 
+  const { data: listeningNotes, isFetching: isNotesLoading } = useQuery({
+    queryKey: ['listening-notes', podcastId],
+    queryFn: () => fetchListeningNotes(podcastId),
+    enabled: Number.isFinite(podcastId),
+  });
+
+  const saveNoteMutation = useMutation({
+    mutationFn: (payload: ListeningNoteFormData) =>
+      editingNote
+        ? updateListeningNote(editingNote.id, payload)
+        : createListeningNote(podcastId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['listening-notes', podcastId] });
+      closeNoteDialog();
+    },
+  });
+
+  const removeNoteMutation = useMutation({
+    mutationFn: deleteListeningNote,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['listening-notes', podcastId] });
+    },
+  });
+
   /** 打开播客编辑对话框 */
   function openPodcastEdit() {
     if (!podcast) return;
@@ -247,6 +287,40 @@ export default function PodcastDetailPage() {
     const targetStatus: ListenStatus =
       episode.listen_status === '未收听' ? '已收听' : '未收听';
     toggleListenMutation.mutate({ id: episode.id, status: targetStatus });
+  }
+
+  /** 打开新增听感笔记对话框 */
+  function openCreateNote() {
+    setEditingNote(null);
+    setNoteForm(EMPTY_NOTE);
+    setNoteDialogOpen(true);
+  }
+
+  /**
+   * 打开编辑听感笔记对话框
+   * @param note - 待编辑笔记
+   */
+  function openEditNote(note: ListeningNote) {
+    setEditingNote(note);
+    setNoteForm({ content: note.content });
+    setNoteDialogOpen(true);
+  }
+
+  /** 关闭听感笔记对话框 */
+  function closeNoteDialog() {
+    setNoteDialogOpen(false);
+    setEditingNote(null);
+    setNoteForm(EMPTY_NOTE);
+  }
+
+  /**
+   * 删除听感笔记
+   * @param note - 待删除笔记
+   */
+  function handleDeleteNote(note: ListeningNote) {
+    if (window.confirm('确定删除这条听感笔记？')) {
+      removeNoteMutation.mutate(note.id);
+    }
   }
 
   if (isLoading) {
@@ -466,6 +540,69 @@ export default function PodcastDetailPage() {
         )}
       </Card>
 
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: 5, mb: 2 }}>
+        <Typography variant="h5" fontWeight={600}>
+          听感笔记 ({isNotesLoading ? '加载中...' : listeningNotes?.length ?? 0})
+        </Typography>
+        <Button variant="contained" startIcon={<StickyNote2Icon />} onClick={openCreateNote}>
+          新增笔记
+        </Button>
+      </Stack>
+
+      <Card variant="outlined">
+        {isNotesLoading && !listeningNotes ? (
+          <Box p={4} textAlign="center">
+            <CircularProgress size={32} sx={{ mb: 2 }} />
+            <Typography color="text.secondary">正在加载听感笔记...</Typography>
+          </Box>
+        ) : listeningNotes?.length === 0 ? (
+          <Box p={4} textAlign="center">
+            <Typography color="text.secondary">
+              暂无听感笔记，点击上方按钮添加你的收听感受。
+            </Typography>
+          </Box>
+        ) : (
+          <List disablePadding>
+            {(listeningNotes ?? []).map((note, index) => (
+              <Box key={note.id}>
+                {index > 0 && <Divider component="li" />}
+                <ListItem
+                  secondaryAction={
+                    <Stack direction="row">
+                      <IconButton edge="end" onClick={() => openEditNote(note)}>
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        edge="end"
+                        color="error"
+                        onClick={() => handleDeleteNote(note)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Stack>
+                  }
+                >
+                  <Stack direction="column" spacing={1} sx={{ pr: 12, width: '100%' }}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <StickyNote2Icon fontSize="small" color="action" />
+                      <Typography variant="caption" color="text.secondary">
+                        {dayjs(note.created_at).format('YYYY-MM-DD HH:mm')}
+                      </Typography>
+                    </Stack>
+                    <Typography
+                      variant="body1"
+                      sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
+                    >
+                      {note.content}
+                    </Typography>
+                  </Stack>
+                </ListItem>
+              </Box>
+            ))}
+          </List>
+        )}
+      </Card>
+
       <Dialog
         open={podcastDialogOpen}
         onClose={() => setPodcastDialogOpen(false)}
@@ -608,6 +745,35 @@ export default function PodcastDetailPage() {
             disabled={markAllListenedMutation.isPending}
           >
             {markAllListenedMutation.isPending ? '标记中...' : '确认标记'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={noteDialogOpen} onClose={closeNoteDialog} fullWidth maxWidth="sm">
+        <DialogTitle>{editingNote ? '编辑听感笔记' : '新增听感笔记'}</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} mt={1}>
+            <TextField
+              label="笔记内容"
+              required
+              fullWidth
+              multiline
+              minRows={5}
+              maxRows={15}
+              placeholder="写下你收听这档播客的感受..."
+              value={noteForm.content}
+              onChange={(e) => setNoteForm({ ...noteForm, content: e.target.value })}
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeNoteDialog}>取消</Button>
+          <Button
+            variant="contained"
+            disabled={!noteForm.content.trim() || saveNoteMutation.isPending}
+            onClick={() => saveNoteMutation.mutate(noteForm)}
+          >
+            {saveNoteMutation.isPending ? '保存中...' : '保存'}
           </Button>
         </DialogActions>
       </Dialog>

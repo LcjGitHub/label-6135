@@ -91,3 +91,16 @@ export interface ThemeGroup {
   podcast_count: number;
   podcasts: PodcastThemeItem[];
 }
+
+/** 听感笔记实体 */
+export interface ListeningNote {
+  id: number;
+  podcast_id: number;
+  content: string;
+  created_at: string;
+}
+
+/** 创建/更新听感笔记表单 */
+export interface ListeningNoteFormData {
+  content: string;
+}

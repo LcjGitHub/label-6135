@@ -2,7 +2,7 @@
 
 import enum
 
-from sqlalchemy import Boolean, Enum, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
@@ -36,6 +36,13 @@ class Podcast(Base):
         order_by="Episode.id",
     )
 
+    listening_notes: Mapped[list["ListeningNote"]] = relationship(
+        "ListeningNote",
+        back_populates="podcast",
+        cascade="all, delete-orphan",
+        order_by="ListeningNote.id.desc()",
+    )
+
 
 class Episode(Base):
     """播客单集。"""
@@ -58,3 +65,22 @@ class Episode(Base):
     )
 
     podcast: Mapped["Podcast"] = relationship("Podcast", back_populates="episodes")
+
+
+class ListeningNote(Base):
+    """播客听感笔记。"""
+
+    __tablename__ = "listening_notes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    podcast_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("podcasts.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[str] = mapped_column(
+        DateTime, nullable=False, server_default=func.now()
+    )
+
+    podcast: Mapped["Podcast"] = relationship("Podcast", back_populates="listening_notes")

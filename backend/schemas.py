@@ -1,5 +1,7 @@
 """Pydantic 请求/响应模型。"""
 
+from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from models import ListenStatus
@@ -136,3 +138,26 @@ class StatsResponse(BaseModel):
     total_podcasts: int
     total_episodes: int
     platform_stats: list[PlatformStats]
+
+
+class ListeningNoteCreate(BaseModel):
+    """创建听感笔记。"""
+
+    content: str = Field(..., min_length=1)
+
+
+class ListeningNoteUpdate(BaseModel):
+    """更新听感笔记。"""
+
+    content: str = Field(..., min_length=1)
+
+
+class ListeningNoteResponse(BaseModel):
+    """听感笔记响应。"""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    podcast_id: int
+    content: str
+    created_at: datetime

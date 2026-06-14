@@ -5,6 +5,8 @@ import type {
   EpisodeFormData,
   EpisodeWithPodcast,
   ListenStatus,
+  ListeningNote,
+  ListeningNoteFormData,
   Podcast,
   PodcastDetail,
   PodcastFormData,
@@ -176,4 +178,43 @@ export async function fetchAllEpisodes(): Promise<EpisodeWithPodcast[]> {
 export async function fetchPodcastsByTheme(): Promise<ThemeGroup[]> {
   const { data } = await api.get<ThemeGroup[]>('/podcasts/themes/grouped');
   return data;
+}
+
+/** 获取指定播客的听感笔记列表 */
+export async function fetchListeningNotes(
+  podcastId: number,
+): Promise<ListeningNote[]> {
+  const { data } = await api.get<ListeningNote[]>(
+    `/podcasts/${podcastId}/listening-notes`,
+  );
+  return data;
+}
+
+/** 创建听感笔记 */
+export async function createListeningNote(
+  podcastId: number,
+  payload: ListeningNoteFormData,
+): Promise<ListeningNote> {
+  const { data } = await api.post<ListeningNote>(
+    `/podcasts/${podcastId}/listening-notes`,
+    payload,
+  );
+  return data;
+}
+
+/** 更新听感笔记 */
+export async function updateListeningNote(
+  id: number,
+  payload: ListeningNoteFormData,
+): Promise<ListeningNote> {
+  const { data } = await api.put<ListeningNote>(
+    `/listening-notes/${id}`,
+    payload,
+  );
+  return data;
+}
+
+/** 删除听感笔记 */
+export async function deleteListeningNote(id: number): Promise<void> {
+  await api.delete(`/listening-notes/${id}`);
 }

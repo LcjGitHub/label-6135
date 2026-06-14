@@ -137,3 +137,47 @@ def migrate_database() -> None:
                     "ALTER TABLE episodes ADD COLUMN duration INTEGER"
                 )
             )
+
+    if not inspector.has_table("listening_notes"):
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    "CREATE TABLE IF NOT EXISTS listening_notes ("
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    "podcast_id INTEGER NOT NULL, "
+                    "content TEXT NOT NULL, "
+                    "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                    "FOREIGN KEY (podcast_id) REFERENCES podcasts(id) ON DELETE CASCADE"
+                    ")"
+                )
+            )
+    else:
+        listening_note_columns = {
+            col["name"] for col in inspector.get_columns("listening_notes")
+        }
+        if "podcast_id" not in listening_note_columns:
+            with engine.begin() as conn:
+                conn.execute(
+                    text(
+                        "ALTER TABLE listening_notes ADD COLUMN podcast_id INTEGER NOT NULL DEFAULT 0"
+                    )
+                )
+                conn.execute(
+                    text(
+                        "UPDATE listening_notes SET podcast_id = (SELECT id FROM podcasts ORDER BY id LIMIT 1) WHERE podcast_id = 0"
+                    )
+                )
+        if "content" not in listening_note_columns:
+            with engine.begin() as conn:
+                conn.execute(
+                    text(
+                        "ALTER TABLE listening_notes ADD COLUMN content TEXT NOT NULL DEFAULT ''"
+                    )
+                )
+        if "created_at" not in listening_note_columns:
+            with engine.begin() as conn:
+                conn.execute(
+                    text(
+                        "ALTER TABLE listening_notes ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP"
+                    )
+                )

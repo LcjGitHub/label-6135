@@ -6,7 +6,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import Base, engine, get_db, migrate_database
-from routers import episodes_router, podcasts_router, statistics_router
+from routers import (
+    episodes_router,
+    listening_notes_router,
+    podcasts_router,
+    statistics_router,
+)
 from seed import seed_database
 
 
@@ -40,6 +45,7 @@ def health_check():
 
 app.include_router(podcasts_router)
 app.include_router(episodes_router)
+app.include_router(listening_notes_router)
 app.include_router(statistics_router)
 
 
