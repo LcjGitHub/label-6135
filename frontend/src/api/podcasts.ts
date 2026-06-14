@@ -28,13 +28,20 @@ export async function fetchPlatforms(): Promise<string[]> {
   return data;
 }
 
+/** 获取所有主题列表 */
+export async function fetchThemes(): Promise<string[]> {
+  const { data } = await api.get<string[]>('/themes');
+  return data;
+}
+
 /** 评分排序方式 */
 export type RatingSort = 'none' | 'asc' | 'desc';
 
-/** 获取播客列表（支持平台筛选、名称搜索和评分排序） */
+/** 获取播客列表（支持平台筛选、主题筛选、名称搜索和评分排序） */
 export async function fetchPodcasts(
   favoritedOnly: boolean = false,
   platform?: string,
+  theme?: string,
   keyword?: string,
   sortByRating: RatingSort = 'none',
 ): Promise<Podcast[]> {
@@ -43,6 +50,9 @@ export async function fetchPodcasts(
   };
   if (platform) {
     params.platform = platform;
+  }
+  if (theme) {
+    params.theme = theme;
   }
   if (keyword) {
     params.keyword = keyword;

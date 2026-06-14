@@ -60,3 +60,13 @@ def list_platforms(db: Session) -> list[str]:
         .all()
     )
     return [row.platform for row in rows]
+
+
+def list_themes(db: Session) -> list[str]:
+    rows = (
+        db.query(models.Podcast.theme)
+        .distinct()
+        .order_by(models.Podcast.theme)
+        .all()
+    )
+    return [row.theme for row in rows]

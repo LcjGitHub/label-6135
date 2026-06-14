@@ -18,6 +18,7 @@ router = APIRouter(prefix="/api/podcasts", tags=["播客"])
 def list_podcasts(
     favorited_only: bool = False,
     platform: str | None = Query(None, min_length=1, max_length=100),
+    theme: str | None = Query(None, min_length=1, max_length=200),
     keyword: str | None = Query(None, min_length=1, max_length=200),
     sort_by_rating: str | None = Query(None, pattern="^(asc|desc)$"),
     db: Session = Depends(get_db),
@@ -27,6 +28,8 @@ def list_podcasts(
         query = query.filter(models.Podcast.is_favorited == True)
     if platform:
         query = query.filter(models.Podcast.platform == platform)
+    if theme:
+        query = query.filter(models.Podcast.theme == theme)
     if keyword:
         query = query.filter(models.Podcast.name.contains(keyword))
     if sort_by_rating == "desc":

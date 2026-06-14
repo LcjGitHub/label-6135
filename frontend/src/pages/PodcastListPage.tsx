@@ -39,6 +39,7 @@ import {
   deletePodcast,
   fetchPlatforms,
   fetchPodcasts,
+  fetchThemes,
   toggleFavorite,
   updatePodcast,
   type RatingSort,
@@ -63,13 +64,16 @@ export default function PodcastListPage() {
   const [form, setForm] = useState<PodcastFormData>(EMPTY_FORM);
   const [favoritedOnly, setFavoritedOnly] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState(searchParams.get('platform') || '');
+  const [selectedTheme, setSelectedTheme] = useState(searchParams.get('theme') || '');
   const [searchInput, setSearchInput] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
   const [ratingSort, setRatingSort] = useState<RatingSort>('none');
 
   useEffect(() => {
     const platformParam = searchParams.get('platform');
+    const themeParam = searchParams.get('theme');
     setSelectedPlatform(platformParam || '');
+    setSelectedTheme(themeParam || '');
   }, [searchParams]);
 
   const { data: platforms = [] } = useQuery({
@@ -77,9 +81,14 @@ export default function PodcastListPage() {
     queryFn: fetchPlatforms,
   });
 
+  const { data: themes = [] } = useQuery({
+    queryKey: ['themes'],
+    queryFn: fetchThemes,
+  });
+
   const { data: podcasts, isFetching, isLoading, error } = useQuery({
-    queryKey: ['podcasts', favoritedOnly, selectedPlatform, searchKeyword, ratingSort],
-    queryFn: () => fetchPodcasts(favoritedOnly, selectedPlatform, searchKeyword, ratingSort),
+    queryKey: ['podcasts', favoritedOnly, selectedPlatform, selectedTheme, searchKeyword, ratingSort],
+    queryFn: () => fetchPodcasts(favoritedOnly, selectedPlatform, selectedTheme, searchKeyword, ratingSort),
   });
 
   useEffect(() => {
@@ -231,17 +240,45 @@ export default function PodcastListPage() {
             onChange={(e) => {
               const value = e.target.value;
               setSelectedPlatform(value);
+              const newParams = new URLSearchParams(searchParams);
               if (value) {
-                setSearchParams({ platform: value }, { replace: true });
+                newParams.set('platform', value);
               } else {
-                setSearchParams({}, { replace: true });
+                newParams.delete('platform');
               }
+              setSearchParams(newParams, { replace: true });
             }}
           >
             <MenuItem value="">全部平台</MenuItem>
             {platforms.map((p) => (
               <MenuItem key={p} value={p}>
                 {p}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 180 }}>
+          <InputLabel id="theme-filter-label">主题筛选</InputLabel>
+          <Select
+            labelId="theme-filter-label"
+            value={selectedTheme}
+            label="主题筛选"
+            onChange={(e) => {
+              const value = e.target.value;
+              setSelectedTheme(value);
+              const newParams = new URLSearchParams(searchParams);
+              if (value) {
+                newParams.set('theme', value);
+              } else {
+                newParams.delete('theme');
+              }
+              setSearchParams(newParams, { replace: true });
+            }}
+          >
+            <MenuItem value="">全部主题</MenuItem>
+            {themes.map((t) => (
+              <MenuItem key={t} value={t}>
+                {t}
               </MenuItem>
             ))}
           </Select>

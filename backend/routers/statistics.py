@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from schemas import StatsResponse
-from services import get_stats, list_platforms
+from services import get_stats, list_platforms, list_themes
 
 router = APIRouter(prefix="/api", tags=["统计"])
 
@@ -28,3 +28,8 @@ def get_stats_endpoint(db: Session = Depends(get_db)):
 @router.get("/platforms", response_model=list[str])
 def list_platforms_endpoint(db: Session = Depends(get_db)):
     return list_platforms(db)
+
+
+@router.get("/themes", response_model=list[str])
+def list_themes_endpoint(db: Session = Depends(get_db)):
+    return list_themes(db)
