@@ -1,0 +1,168 @@
+name: CI
+
+on:
+  push:
+    branches: [ "**" ]
+    paths-ignore:
+      - "**/*.md"
+      - ".gitignore"
+      - "LICENSE"
+  pull_request:
+    branches: [ "**" ]
+    paths-ignore:
+      - "**/*.md"
+      - ".gitignore"
+      - "LICENSE"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+  PYTHON_VERSION: "3.11"
+  BACKEND_PORT: "7000"
+  FRONTEND_PORT: "7101"
+
+jobs:
+  backend-check:
+    name: 后端环境检查与健康测试
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: "package-lock.json"
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+          cache-dependency-path: "backend/pyproject.toml"
+
+      - name: 验证 Python 版本
+        run: |
+          python --version
+          python -c "import sys; assert sys.version_info >= (3, 10), 'Python 3.10+ required'"
+
+      - name: 安装根目录依赖 (CI 模式)
+        run: npm ci
+
+      - name: 安装后端依赖
+        run: npm run install:backend
+
+      - name: 验证后端环境
+        run: npm run check:backend
+
+      - name: 显示后端依赖列表
+        run: |
+          source backend/.venv/bin/activate
+          pip list
+
+      - name: 启动后端并执行健康检查
+        run: npm run ci:backend-healthcheck
+        env:
+          HEALTHCHECK_RETRIES: "60"
+          HEALTHCHECK_INTERVAL: "1000"
+
+      - name: 调试 - 显示后端日志
+        if: failure()
+        run: |
+          echo "=== 后端目录结构 ==="
+          ls -la backend/
+          echo "=== 虚拟环境 ==="
+          ls -la backend/.venv/ 2>/dev/null || echo "虚拟环境不存在"
+
+  frontend-check:
+    name: 前端类型检查与构建
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: |
+            frontend/package-lock.json
+            package-lock.json
+
+      - name: 验证 Node.js 版本
+        run: |
+          node --version
+          npm --version
+
+      - name: 安装根目录依赖 (CI 模式)
+        run: npm ci
+
+      - name: 安装前端依赖
+        run: npm run install:frontend
+
+      - name: 验证前端环境
+        run: npm run check:frontend
+
+      - name: 显示前端依赖列表
+        run: npm ls --prefix frontend --depth=0
+
+      - name: 类型检查 (tsc --noEmit)
+        run: npm run typecheck
+
+      - name: 构建生产版本
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: 验证构建产物
+        run: |
+          ls -la frontend/dist/
+          test -f frontend/dist/index.html || { echo "ERROR: index.html 不存在"; exit 1; }
+          echo "构建产物大小:"
+          du -sh frontend/dist/
+
+      - name: 上传构建产物
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist-${{ github.sha }}
+          path: frontend/dist
+          retention-days: 7
+          compression-level: 9
+
+      - name: 调试 - 显示构建日志
+        if: failure()
+        run: |
+          echo "=== 前端目录结构 ==="
+          ls -la frontend/
+          echo "=== node_modules 存在性 ==="
+          test -d frontend/node_modules && echo "node_modules 存在" || echo "node_modules 不存在"
+
+  ci-summary:
+    name: CI 汇总
+    needs: [backend-check, frontend-check]
+    runs-on: ubuntu-latest
+    if: always()
+    timeout-minutes: 5
+    steps:
+      - name: 生成 CI 状态报告
+        run: |
+          echo "## CI 执行结果" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- 后端检查: ${{ needs.backend-check.result == 'success' && '✅ 通过' || '❌ 失败' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 前端检查: ${{ needs.frontend-check.result == 'success' && '✅ 通过' || '❌ 失败' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.backend-check.result }}" = "success" ] && [ "${{ needs.frontend-check.result }}" = "success" ]; then
+            echo "🎉 **所有检查通过！**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **部分检查未通过，请查看详细日志**" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi

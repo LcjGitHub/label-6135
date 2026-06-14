@@ -1,10 +1,39 @@
 {
   "name": "podcast-app",
   "private": true,
-  "description": "小众播客节目单 — 根目录便捷脚本",
+  "version": "0.1.0",
+  "description": "小众播客节目单 — 全栈应用工程化配置",
+  "engines": {
+    "node": ">=18",
+    "npm": ">=9"
+  },
   "scripts": {
-    "dev": "npm run dev --prefix frontend",
+    "postinstall": "echo [postinstall] 根目录依赖安装完成，如需安装前后端依赖请运行: npm run install:all",
+    "dev": "node scripts/dev.js",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "node scripts/start-backend.js",
     "build": "npm run build --prefix frontend",
-    "install:frontend": "npm install --prefix frontend"
+    "typecheck": "npm run typecheck --prefix frontend",
+    "preview": "npm run preview --prefix frontend",
+    "install:frontend": "npm install --prefix frontend",
+    "install:backend": "node scripts/install-backend.js",
+    "install:all": "npm install && npm run install:frontend && npm run install:backend",
+    "install:ci": "npm ci && npm run install:frontend && npm run install:backend",
+    "check:backend": "node scripts/check-backend.js",
+    "check:frontend": "node scripts/check-frontend.js",
+    "check:all": "npm run check:backend && npm run check:frontend",
+    "healthcheck": "node scripts/healthcheck.js",
+    "clean": "npm run clean:frontend && npm run clean:backend",
+    "clean:frontend": "rimraf frontend/node_modules frontend/dist",
+    "clean:backend": "rimraf backend/.venv",
+    "reset": "npm run clean && npm run install:all",
+    "ci:install": "npm run install:ci",
+    "ci:backend-healthcheck": "node scripts/ci-backend-healthcheck.js",
+    "ci:frontend": "npm run typecheck --prefix frontend && npm run build --prefix frontend",
+    "ci:all": "npm run ci:install && npm run ci:backend-healthcheck && npm run ci:frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0",
+    "rimraf": "^6.0.0"
   }
 }
